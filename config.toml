@@ -8,9 +8,33 @@ compile_sass = true
 build_search_index = true
 
 # The default language; used in feeds.
-default_language = "en"
+default_language = "fr"
 
 generate_feed = true
+
+
+[languages.fr]
+generate_feed = true # there will be a feed for French content
+build_search_index = true
+taxonomies = [
+    {name = "auteurs"},
+    {name = "tags"},
+]
+
+[languages.fr.translations]
+summary = "Mon blog"
+
+
+[languages.en]
+generate_feed = true # there will be a feed for English content
+build_search_index = true
+taxonomies = [
+    {name = "authors"},
+    {name = "tags"},
+]
+
+[languages.en.translations]
+summary = "My blog"
 
 [markdown]
 # Whether to do syntax highlighting
