@@ -1,9 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
 <h1 class="title">{{ section.title }}</h1>
-<ul>
-  {% for page in section.pages %}
-  <li><a href="{{ page.permalink | safe }}">{{ page.title }}</a></li>
-  {% endfor %}
-</ul>
+
+<div class="list">
+  <ul>
+    {% for page in section.pages %}
+      <li>
+        <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
+
+        <div>
+          <a href="{{ page.permalink | safe }}" class="outline">Lire la suite</a>
+        </div>
+
+      </li>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock content %}
