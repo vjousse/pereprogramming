@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if paginator %}
+{% set pages = paginator.pages %}
+{% else %}
+{% set pages = term.pages %}
+{% endif %}
+
+
+<h1 class="title">#{{ term.name }}</h1>
+
+<div class="list">
+  <ul>
+    {% for page in pages %}
+      <li>
+        <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
+
+        <div>
+          <a href="{{ page.permalink | safe }}" class="outline">Lire la suite</a>
+        </div>
+
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock content %}
