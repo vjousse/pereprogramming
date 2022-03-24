@@ -1,3 +1,7 @@
+:root {
+  --primary: #d81b60;
+}
+
 :root:not([data-theme='dark']),
 [data-theme='light'] {
   --invalid-color: #c62828;
@@ -24,6 +28,44 @@
   --nav-border-color: rgba(115, 130, 140, 0.2);
   --nav-logo-color: #0e1419;
   --article-code-background-color: var(--code-background-color);
+}
+
+/* Pink Light scheme (Default) */
+/* Can be forced with data-theme="light" */
+[data-theme='light'],
+:root:not([data-theme='dark']) {
+  --primary: #d81b60;
+  --primary-hover: #c2185b;
+  --primary-focus: rgba(216, 27, 96, 0.125);
+  --primary-inverse: #fff;
+}
+
+/* Pink Dark scheme (Auto) */
+/* Automatically enabled if user has Dark mode enabled */
+@media only screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --primary: #d81b60;
+    --primary-hover: #e91e63;
+    --primary-focus: rgba(216, 27, 96, 0.25);
+    --primary-inverse: #fff;
+  }
+}
+
+/* Pink Dark scheme (Forced) */
+/* Enabled if forced with data-theme="dark" */
+[data-theme='dark'] {
+  --primary: #d81b60;
+  --primary-hover: #e91e63;
+  --primary-focus: rgba(216, 27, 96, 0.25);
+  --primary-inverse: #fff;
+}
+
+/* Pink (Common styles) */
+:root {
+  --form-element-active-border-color: var(--primary);
+  --form-element-focus-color: var(--primary-focus);
+  --switch-color: var(--primary-inverse);
+  --switch-checked-background-color: var(--primary);
 }
 
 @media (min-width: 1200px) {
@@ -128,7 +170,7 @@ article ul {
   margin-top: 30px;
   font-size: 0.6rem;
   line-height: normal;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .post-info p {
@@ -153,4 +195,51 @@ article ul {
 
 .post-info .tag::before {
   content: '#';
+}
+
+/** Logo **/
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-weight: bold;
+  font-display: auto;
+  font-family: monospace, monospace;
+}
+.logo img {
+  height: 44px;
+}
+.logo__mark {
+  margin-right: 5px;
+}
+.logo__text {
+  font-size: 1.125rem;
+}
+.logo__cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1rem;
+  margin-left: 5px;
+  border-radius: 1px;
+  animation-name: cursor;
+  animation-duration: 1s;
+  animation-iteration-count: 10;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo__cursor {
+    animation: none;
+  }
+}
+@keyframes cursor {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    background: #d81b60;
+  }
+  100% {
+    opacity: 0;
+  }
 }
