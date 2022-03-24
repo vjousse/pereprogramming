@@ -9,7 +9,7 @@
 {% endif %}
 
 
-<h1 class="title">#{{ term.name }}</h1>
+<h1 class="title"># {{ term.name }}</h1>
 
 <div class="list">
   <ul>
@@ -17,8 +17,9 @@
       <li>
         <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
 
+        {{ page.summary | safe }}
         <div>
-          <a href="{{ page.permalink | safe }}" class="outline">Lire la suite</a>
+          <a href="{{ page.permalink | safe }}" class="outline">Lire la suite →</a>
         </div>
 
       </li>

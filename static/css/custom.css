@@ -152,9 +152,17 @@ p {
   margin-top: 3.5rem;
 }
 
+.list > ul {
+  padding-left: 0;
+}
+
 .list h2 {
   margin-bottom: 1rem;
   font-size: 1.25rem;
+}
+
+.list .next {
+  padding-top: 1rem;
 }
 
 article ul > li {
@@ -166,7 +174,8 @@ article ul {
 }
 
 /** Post-info **/
-.post-info {
+.post-info,
+.list-post-info {
   margin-top: 30px;
   font-size: 0.6rem;
   line-height: normal;
@@ -178,22 +187,40 @@ article ul {
   font-size: 0.9rem;
 }
 
-.post-info .feather {
+.list-post-info p {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.list-post-info p.inline-info {
+  display: inline-block;
+  padding-right: 0.5rem;
+}
+
+.list-post-info p.inline-info .separator {
+  padding-right: 0.5rem;
+}
+
+.post-info .feather,
+.list-post-info .feather {
   display: inline-block;
   vertical-align: -0.125em;
   width: 1em;
   height: 1em;
 }
 
-.post-info svg {
-  margin-right: 0.8em;
+.post-info svg,
+.list-post-info svg {
+  margin-right: 0.3em;
 }
 
-.post-info .tag {
+.post-info .tag,
+.list-post-info .tag {
   margin-right: 0.5em;
 }
 
-.post-info .tag::before {
+.post-info .tag::before,
+.list-post-info .tag::before {
   content: '#';
 }
 
@@ -243,3 +270,5 @@ article ul {
     opacity: 0;
   }
 }
+
+/** End Logo **/

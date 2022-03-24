@@ -8,7 +8,7 @@ tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
 +++
 
 Dans cette partie, nous allons mettre en place l'API pour nous permettre de __récupérer__ les articles, les __créer__ de manière dynamique, les __modifier__ et les __supprimer__.Vous verrez souvent cela résumé par l'acronyme __CRUD__ : **C**reate, **R**retrieve, **U**pdate et **D**elete.
-
+<!-- more -->
 ## Utilisation de Pydantic
 
 Comme je vous l'avais mentionné dans l'instroduction, FastAPI a la particularité d'utiliser au maximum les [types de python](https://fastapi.tiangolo.com/python-types/) et plus particulièrement une librairie appelée [Pydantic](https://pydantic-docs.helpmanual.io/).

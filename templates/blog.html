@@ -1,19 +1,59 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1 class="title">{{ section.title }}</h1>
+  <h1 class="title">{{ section.title }}</h1>
 
-<div class="list">
-  <ul>
-    {% for page in section.pages %}
-      <li>
-        <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
+  <div class="list">
+    <ul>
+      {% for page in section.pages %}
+        <li>
+          <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
 
-        <div>
-          <a href="{{ page.permalink | safe }}" class="outline">Lire la suite</a>
-        </div>
+          {{ page.summary | safe }}
+          <div class="list-post-info">
 
-      </li>
-    {% endfor %}
-  </ul>
-</div>
+              <p class="inline-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                {{ page.date | date(format="%Y-%m-%d", timezone="Europe/Paris") }}
+
+              </p>
+              <p class="inline-info">
+                <span class="separator">|</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                {{ page.reading_time }} minutes
+              </p>
+              <p class="inline-info">
+                <span class="separator">|</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                {{ page.word_count }} mots
+
+              </p>
+
+            {% if page.taxonomies.tags %}
+              <p>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+
+                {% for tag in page.taxonomies.tags %}
+                  <span class="tag"><a href="{{ get_taxonomy_url(kind="tags", name=tag, lang=page.lang) }}">{{ tag }}</a></span>
+                {% endfor %}
+              {% endif %}
+          </div>
+          <div class="next">
+            <a href="{{ page.permalink | safe }}" class="outline">Lire la suite →</a>
+          </div>
+
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endblock content %}

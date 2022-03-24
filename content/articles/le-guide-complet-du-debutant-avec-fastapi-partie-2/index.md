@@ -7,9 +7,11 @@ author = ["Vincent Jousse"]
 tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
 +++
 
-## Projet : une newsletter à la Substack
-
 J'ai toujours aimé apprendre par l'exemple et ce guide ne dérogera pas à la règle. Nous allons prendre comme prétexte la création d'un projet pour apprendre à nous servir de FastAPI. Nous allons développer une application de [publication de contenu/newsletter à la Substack](https://substack.com/).
+
+<!-- more -->
+
+## Projet : une newsletter à la Substack
 
 Les principales fonctionnalités que nous développerons :
 - Création d'articles
