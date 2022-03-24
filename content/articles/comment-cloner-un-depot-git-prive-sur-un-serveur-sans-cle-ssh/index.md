@@ -1,12 +1,11 @@
----
-title: "Comment cloner un dépôt Git privé sur un serveur sans clé ssh locale"
-date: 2021-05-12T14:40:13+01:00
-draft: false
-tags:
-  - astuce
-  - ssh
-  - git
----
++++
+title="Comment cloner un dépôt Git privé sur un serveur sans clé ssh locale"
+date=2021-05-12T14:40:13+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["git", "ssh", "astuce"]
++++
 
 ## Le problème
 

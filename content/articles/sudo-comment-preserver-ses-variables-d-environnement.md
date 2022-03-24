@@ -1,11 +1,11 @@
----
-title: "Comment préserver ses variables d'environnement et sa configuration vim avec sudo"
-date: 2021-08-25T08:00:03+01:00
-tags:
-  - linux
-  - terminal
-  - tip
----
++++
+title="Comment préserver ses variables d'environnement et sa configuration vim avec sudo"
+date=2021-08-25T08:00:03+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["linux", "terminal", "astuce"]
++++
 
 Vous en conviendrez, il n'y a rien de plus énervant que de faire un `sudo vim` et de se retrouver sans sa configuration `vim` préférée car votre utilisateur root n'a pas de configuration pour vim.
 

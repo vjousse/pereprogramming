@@ -1,13 +1,11 @@
----
-title: "FastAPI : Le meilleur framework web Python en 2021"
-date: 2021-06-11T08:30:55+01:00
-toc: true
-tags:
-  - python
-  - framework
-  - fastapi
-  - web
----
++++
+title="FastAPI : Le meilleur framework web Python en 2021"
+date=2021-06-11T08:30:55+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["python", "framework", "fastapi", "web"]
++++
 
 Oui ce titre est racoleur, oui il fait preuve d'une opinion totalement biaisée. Mais bordel, quand quelque chose est __bien__, il faut le dire ! Quitte à utiliser de falacieux moyens dignes du meilleur _growth hacker_, à savoir, je vous le donne en mille : le titre putaclick.
 

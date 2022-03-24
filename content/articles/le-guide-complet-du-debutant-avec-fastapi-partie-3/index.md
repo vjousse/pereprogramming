@@ -1,14 +1,11 @@
----
-title: "Le guide complet du débutant avec FastAPI - Partie 3 : réorganisation du code, tests automatisés"
-date: 2021-06-25T19:33:20+01:00
-tags:
-  - python
-  - framework
-  - fastapi
-  - web
-  - fastapi-tutorial
-toc: true
----
++++
+title="Le guide complet du débutant avec FastAPI - Partie 3 : réorganisation du code, tests automatisés"
+date=2021-06-25T19:33:20+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
++++
 
 ## Restructuration du code
 

@@ -1,14 +1,11 @@
----
-title: "Le guide complet du débutant avec FastAPI - Partie 5 : création, récupération et suppression des articles"
-date: 2021-09-29T09:33:20+01:00
-tags:
-  - python
-  - framework
-  - fastapi
-  - web
-  - fastapi-tutorial
-toc: true
----
++++
+title="Le guide complet du débutant avec FastAPI - Partie 5 : création, récupération et suppression des articles"
+date=2021-09-29T09:33:20+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
++++
 
 Dans cette partie, nous allons mettre en place l'API pour nous permettre de __récupérer__ les articles, les __créer__ de manière dynamique, les __modifier__ et les __supprimer__.Vous verrez souvent cela résumé par l'acronyme __CRUD__ : **C**reate, **R**retrieve, **U**pdate et **D**elete.
 

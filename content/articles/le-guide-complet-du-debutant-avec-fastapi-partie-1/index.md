@@ -1,14 +1,11 @@
----
-title: "Le guide complet du débutant avec FastAPI - Partie 1 : installation et premier programme"
-date: 2021-06-11T19:33:20+01:00
-toc: true
-tags:
-  - python
-  - framework
-  - fastapi
-  - web
-  - fastapi-tutorial
----
++++
+title="Le guide complet du débutant avec FastAPI - Partie 1 : installation et premier programme"
+date=2021-06-11T19:33:20+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
++++
 
 ## Pourquoi FastAPI ?
 

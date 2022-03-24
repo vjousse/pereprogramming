@@ -1,13 +1,11 @@
----
-title: "Comment déployer gratuitement une app Fastapi (asyncio) chez Alwaysdata"
-date: 2021-05-11T10:14:42+01:00
-toc: true
-images:
-tags:
-  - python
-  - fastapi
-  - deploiement
----
++++
+title="Comment déployer gratuitement une app Fastapi (asyncio) chez Alwaysdata"
+date=2021-05-11T10:14:42+01:00
+
+[taxonomies]
+author = ["Vincent Jousse"]
+tags = ["python", "fastapi", "deploiement"]
++++
 
 __TL;DR__ C'est simple, ça fonctionne sans problème et le support d'[Alwaysdata](https://www.alwaysdata.com) est au top.
 
