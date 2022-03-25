@@ -288,12 +288,11 @@ article ul {
   body > main {
     --block-spacing-horizontal: calc(var(--spacing) * 1.75);
     grid-column-gap: calc(var(--block-spacing-horizontal) * 3);
-    display: grid;
     grid-template-columns: 200px auto;
   }
 
-  body > main.articles_list {
-    display: block;
+  body > main.article_detail {
+    display: grid;
   }
 }
 @media (min-width: 1200px) {
