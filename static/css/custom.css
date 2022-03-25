@@ -109,7 +109,7 @@ body > main {
   padding-top: calc(var(--block-spacing-vertical) + 1rem);
 }
 
-nav > ul > li {
+body > nav > ul > li {
   vertical-align: middle;
   display: inline-block;
 }
@@ -126,7 +126,7 @@ article img {
 }
 
 article h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 2.5rem;
   font-weight: 750;
 }
@@ -407,4 +407,19 @@ main > aside details[open] > summary {
 }
 main > aside details[open] > summary:not([role='button']):not(:focus) {
   color: var(--h1-color);
+}
+
+.toc-header {
+  margin: 0.8em 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+main > aside nav.closed-on-mobile {
+  display: none;
+}
+@media (min-width: 992px) {
+  main > aside nav.closed-on-mobile {
+    display: block;
+  }
 }
