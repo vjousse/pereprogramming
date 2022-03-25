@@ -446,3 +446,18 @@ main > aside nav.closed-on-mobile {
 .home-cta a {
   margin-right: 2rem;
 }
+
+nav ul.toc {
+  list-style-type: square;
+}
+
+nav ul.toc li {
+  display: list-item;
+  list-style-type: square;
+  margin-left: 1.2em;
+  padding-left: 0;
+}
+
+nav ul.toc li a {
+  text-decoration: underline dotted;
+}
