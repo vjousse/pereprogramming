@@ -1,12 +1,15 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
-{% if page.toc %}
-
 <aside>
   <nav class="closed-on-mobile">
-    <div class="toc-header"><a href="#top" class="contrast">Table des matières</a></div>
+    <div class="toc-header"><a href="#top" class="contrast">
+    {% if page.toc %}
+        Table des matières
+    {% else %}
+        Retour en haut
+    {% endif %}
+      </a></div>
     <ul class="toc">
     {% for h1 in page.toc %}
         <li>
@@ -34,7 +37,6 @@
     </ul>
   </nav>
 </aside>
-{% endif %}
 <article>
   <div class="post-info">
       <p>

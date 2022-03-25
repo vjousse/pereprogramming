@@ -24,8 +24,8 @@
         <li><a href="https://vimebook.com" target="_blank" class="external">Ebook Vim</a></li>
       </ul>
     </nav>
-    <main class="container">
-        {% block content %} {% endblock %}
+    <main class="container{% block custom_main_css %}{% endblock %}">
+        {% block content %}{% endblock %}
     </main>
   </body>
 </html>

@@ -291,6 +291,10 @@ article ul {
     display: grid;
     grid-template-columns: 200px auto;
   }
+
+  body > main.articles_list {
+    display: block;
+  }
 }
 @media (min-width: 1200px) {
   body > main {
