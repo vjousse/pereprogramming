@@ -146,7 +146,7 @@ Notez le dictionnaire Python passé deuxième paramètre, `{"request": request}`
 
 Il nous faut ensuite créer le contenu du template dans `app/templates/home.html`. Copiez-collez le code suivant :
 
-```django
+```jinja
 <!DOCTYPE html>
 <html>
 <head>
@@ -161,14 +161,14 @@ Il nous faut ensuite créer le contenu du template dans `app/templates/home.html
 ```
 
 Outre le code HTML classique, la première ligne intéressante est la suivante :
-```django
+```jinja
 <link href="{{ url_for('public', path='/styles.css') }}" rel="stylesheet">
 ```
 
 Nous construisons un lien dynamique grâce à la fonction `url_for`. Cette fonction prend en paramètres le nom de la route, `public` dans notre cas (le nom que nous avions donné plus haut, lors du `app.mount`) et l'emplacement du fichier, `path='/styles.css'`, qu'il nous restera à créer. Avec Jinja, tout ce qui est entre `{{` et `}}` sera affiché dans le code HTML.
 
 L'autre ligne intéressante est celle-ci :
-```django
+```jinja
 <p>Current url: <strong>{{ request.url }}</strong></p>
 ```
 Ici nous nous servons de l'objet `request` de starlette que nous avions passé à notre template (`templates.TemplateResponse("home.html", {"request": request})`) pour afficher l'url courante.
@@ -386,7 +386,7 @@ RuntimeWarning: coroutine 'Model.create' was never awaited
 
 Nous passons ensuite notre objet nouvellement créé à un template nommé `articles_create.html` que vous allez créer dès maintenant dans `app/templates/articles_create.html` avec le contenu suivant :
 
-```django
+```jinja
 <!DOCTYPE html>
 <html>
 <head>
@@ -426,7 +426,7 @@ Notez l'utilisation de la function `Article.all()` qui nous permet de récupére
 
 Il nous reste maintenant à créer le template dans `app/templates/articles_list.html`
 
-```django
+```jinja
 <!DOCTYPE html>
 <html>
 <head>
