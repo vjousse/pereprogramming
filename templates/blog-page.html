@@ -1,17 +1,32 @@
 {% extends "layout.html" %}
 
-{% block custom_main_css %} article_detail{% endblock custom_main_css %}
+{% block meta_content %}
+    {% if page.title %}
+    <title>{{page.title}} —&nbsp;Pere Programming</title>
+    <meta name="twitter:title" content="{{page.title}} —&nbsp;Pere Programming">
+    <meta property="og:title" content="{{page.title}} —&nbsp;Pere Programming" />
+    {% else %}
+    <title>Pere Programming</title>
+    <meta name="twitter:title" content="Pere Programming">
+    <meta property="og:title" content="Pere Programming" />
+    {% endif %}
+    {% if page.description %}
+    <meta name="description" content="{{ page.description | safe }}" />
+    <meta name="twitter:description" content="{{ page.description | safe }}">
+    <meta property="og:description" content="{{ page.description | safe }}" />
+    {% endif %}
+{% endblock meta_content %}
+
+{% block custom_main_css %}{% if page.toc %} article_detail{% endif %}{% endblock custom_main_css %}
 
 {% block content %}
 <aside>
   <nav class="closed-on-mobile">
+    {% if page.toc %} 
     <div class="toc-header"><a href="#top" class="contrast">
-    {% if page.toc %}
         Table des matières
-    {% else %}
-        Retour en haut
-    {% endif %}
       </a></div>
+    {% endif %}
     <ul class="toc">
     {% for h1 in page.toc %}
         <li>

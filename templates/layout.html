@@ -2,9 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Pere Programming</title>
     <link rel="stylesheet" href="/css/pico.min.css">
     <link rel="stylesheet" href="/css/custom.css">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@pereprogramming">
+    <meta name="twitter:creator" content="@pereprogramming">
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="{{config.base_url | safe}}/{{current_path | safe}}" />
+    <meta property="og:site_name" content="Pere Programming" />
+    <meta property="og:image" content="/logo.png">
+    {% block meta_content %}
+    <title>Pere Programming</title>
+    <meta name="twitter:title" content="Pere Programming">
+    <meta property="og:title" content="Pere Programming" />
+    {% endblock meta_content %}
   </head>
 
   <body>
