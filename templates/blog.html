@@ -10,6 +10,10 @@
           <a href="{{ page.permalink | safe }}"><h2>{{ page.title }}</h2></a>
 
           {{ page.summary | safe }}
+          <div class="next">
+            <a href="{{ page.permalink | safe }}" class="outline">Lire la suite →</a>
+          </div>
+
           <div class="list-post-info">
 
               <p class="inline-info">
@@ -48,9 +52,6 @@
                   <span class="tag"><a href="{{ get_taxonomy_url(kind="tags", name=tag, lang=page.lang) }}">{{ tag }}</a></span>
                 {% endfor %}
               {% endif %}
-          </div>
-          <div class="next">
-            <a href="{{ page.permalink | safe }}" class="outline">Lire la suite →</a>
           </div>
 
         </li>
