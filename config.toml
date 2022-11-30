@@ -12,15 +12,14 @@ default_language = "fr"
 
 generate_feed = true
 
+[languages.fr]
+generate_feed = true # there will be a feed for French content
+build_search_index = true
 
 taxonomies = [
     {name = "author", feed = true},
     {name = "tags", feed = true},
 ]
-
-[languages.fr]
-generate_feed = true # there will be a feed for French content
-build_search_index = true
 
 [languages.fr.translations]
 summary = "Mon blog"
@@ -29,6 +28,11 @@ summary = "Mon blog"
 [languages.en]
 generate_feed = true # there will be a feed for English content
 build_search_index = true
+
+taxonomies = [
+    {name = "author", feed = true},
+    {name = "tags", feed = true},
+]
 
 [languages.en.translations]
 summary = "My blog"
