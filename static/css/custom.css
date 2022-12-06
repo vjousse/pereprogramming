@@ -133,12 +133,13 @@ article {
   padding-right: 0;
 }
 
+.list ul > li img,
 article img {
   padding: 1rem 0.5rem;
 }
 
 article h1 {
-  font-size: 2rem;
+  font-size: 2.5rem;
   margin-bottom: 2.5rem;
   font-weight: 750;
 }
@@ -176,9 +177,13 @@ p {
   padding-left: 0;
 }
 
+h1.title {
+  font-size: 2.5rem;
+}
+
 .list h2 {
   margin-bottom: 1rem;
-  font-size: 1.25rem;
+  font-size: 2rem;
 }
 
 .list .next {
