@@ -198,3 +198,5 @@ Nous venons de voir l'importance des environnements virtuels, comment installer 
 La prochaine étape consistera à voir les fondamentaux en développant un exemple d'application de A à Z. Stay tuned !
 
 N.B. : J'ai mis en ligne [le code sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part1)
+
+Pour la partie 2, c'est par ici : [templates html, base de données et documentation](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-2/).
