@@ -1,6 +1,7 @@
 +++
 title="Vim/Neovim : le tutoriel pour frimer comme VsCode"
 date=2022-11-30T10:14:42+01:00
+draft=true
 
 [taxonomies]
 author = ["Vincent Jousse"]

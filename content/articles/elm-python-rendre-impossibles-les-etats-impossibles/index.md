@@ -1,6 +1,7 @@
 +++
 title="Modélisation de données : rendre impossibles les états impossibles"
 date=2022-06-02T08:00:03+01:00
+draft=true
 
 [taxonomies]
 author = ["Vincent Jousse"]
