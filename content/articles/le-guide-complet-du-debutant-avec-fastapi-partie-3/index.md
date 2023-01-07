@@ -327,20 +327,22 @@ Créez un fichier nommé `conftest.py` dans `app/test/conftest.py` et placez-y l
 # app/tests/conftest.py
 
 import os
+from typing import Iterator
+
 import pytest
-from tortoise.contrib.test import finalizer, initializer
-from app.core.config import settings
-from typing import Generator
 from fastapi.testclient import TestClient
+from tortoise.contrib.test import finalizer, initializer
+
+from app.core.config import settings
 from app.main import app
 
-
+# Test client
 @pytest.fixture(scope="module")
-def client() -> Generator:
+def client() -> Iterator[TestClient]:
     db_url = os.environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
     initializer(settings.TORTOISE_MODELS, db_url=db_url, app_label="models")
-    with TestClient(app) as c:
-        yield c
+    with TestClient(app) as test_client:
+        yield test_client
     finalizer()
 ```
 
@@ -420,27 +422,35 @@ Pour que ce code fonctionne, vous devrez modifier le fichier `app/tests/conftest
 ```python
 # app/tests/conftest.py
 
+import asyncio
 import os
+from typing import Iterator
+
 import pytest
-from tortoise.contrib.test import finalizer, initializer
-from app.core.config import settings
-from typing import Generator
 from fastapi.testclient import TestClient
+from tortoise.contrib.test import finalizer, initializer
+
+from app.core.config import settings
 from app.main import app
 
 
 @pytest.fixture(scope="module")
-def client() -> Generator:
-    db_url = os.environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
-    initializer(settings.TORTOISE_MODELS, db_url=db_url, app_label="models")
-    with TestClient(app) as c:
-        yield c
-    finalizer()
+def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
+# Test client
 @pytest.fixture(scope="module")
-def event_loop(client: TestClient) -> Generator:
-    yield client.task.get_loop()
+def client(event_loop: asyncio.BaseEventLoop) -> Iterator[TestClient]:
+    db_url = os.environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
+    initializer(
+        settings.TORTOISE_MODELS, db_url=db_url, app_label="models", loop=event_loop
+    )
+    with TestClient(app) as test_client:
+        yield test_client
+    finalizer()
 ```
 
 Ensuite, lancez votre test comme précédemment :
@@ -494,3 +504,6 @@ app/tests/views/test_home.py .                                                  
 Nous venons d'achever une étape qui peut paraître fastidieuse mais qui est haut combien importante : le refactoring et le test de notre code. Cette étape nous permet maintenant de partir sur des bases propres et solides pour ajouter des fonctionnalités à notre application.
 
 Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part3).
+
+
+Pour la partie 4, c'est par ici : [création, récupération et suppression des articles](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-4/).
