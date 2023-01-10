@@ -159,7 +159,9 @@ questions: list[Question] = [
     Question(prompt="question 3", response=None),
 ]
 
-history: History = History(questions=questions, current="question 1")
+history: History = History(
+    questions=questions, current=Question(prompt="question 1", response="response 1")
+)
 ```
 
 
@@ -183,7 +185,7 @@ Le problème ici, c'est que rien ne nous empêche d'avoir ce type d'état :
 _Python_
 
 ```python
-history: History = History(questions=[], current="question 1")
+history: History = History(questions=[], current=Question(prompt="question 1", response="response 1"))
 ```
 
 _Elm_
@@ -193,3 +195,131 @@ _Elm_
 , current = question1
 }
 ```
+
+Et vous en conviendrez, avoir une question courante qui n'est pas dans la liste des questions possibles est un problème assez fâcheux… Commençons par empêcher le fait d'avoir zéro question via notre modèle. Là normalement vous devriez me dire, « mais comment c'est possible » ? En effet, une liste, que ça soit en Python, en Elm ou en ce que vous voulez, rien ne l'empêche d'être vide !
+
+Nous allons utiliser un idiome assez courant en programmation fonctionnelle, nous allons considérer qu'une liste est en fait composée de son premier élément, puis du reste de la liste. Voici ce que ça donnerait :
+
+_Python_
+
+```python
+@dataclass
+class History:
+    first: Question
+    other_questions: list[Question]
+    current: Question
+```
+
+_Elm_
+```elm
+type alias History =
+    { first : Question,
+    , otherQuestions : List Question
+    , current : Question
+    }
+```
+
+Bon c'est mieux car on ne peut plus avoir de liste vide. MAIS ⚠️ (car évidemment il y a un mais), ça ne nous empêche toujours pas d'avoir une question courante qui ne fait pas partie des questions possibles.
+
+Ce qui donnerait ça par exemple en python :
+
+
+_Python_
+
+```python
+other_questions: list[Question] = [
+    Question(prompt="question 2", response="response 2"),
+    Question(prompt="question 3", response=None),
+]
+
+history: History = History(
+    first=Question(prompt="question 1", response="response 1"),
+    other_questions=other_questions,
+    current=Question(prompt="unknown question", response="unknown response"),
+)
+```
+
+Et quelque chose comme ça en Elm :
+
+_Elm_
+```elm
+{ first: question1
+  otherQuestions = [question2, question3]
+, current = unknown_question
+}
+```
+
+Pour pallier à ce problème, nous allons utiliser la modélisation suivante :
+
+
+_Python_
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class History:
+    previous_questions: list[Question]
+    current: Question
+    remaining_questions: list[Question]
+```
+
+_Elm_
+
+```elm
+type alias History =
+    { previousQuestions : List Question,
+    , current : Question
+    , remainingQuestions : List Question
+    }
+```
+
+La liste complète des questions sera alors obtenue par la concaténation des questions précédentes, de la courante et de celles qui reste. L'idée étant de faire `previous_questions + [current] + remaining_questions` pour constituer notre liste de questions.
+
+Avec une modélisation comme celle-ci, il est impossible d'avoir une liste vide car `current` est forcément requis, et il est aussi impossible d'avoir une question courante qui ne fait pas partie de la liste !
+
+Un exemple complet en Python donnerait cela :
+
+_Python_
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Question:
+    prompt: str
+    response: str | None
+
+@dataclass
+class History:
+    previous_questions: list[Question]
+    current: Question
+    remaining_questions: list[Question]
+
+question1: Question = Question(prompt="question 1", response="response 1")
+question2: Question = Question(prompt="question 2", response="response 2")
+question3: Question = Question(prompt="question 3", response=None)
+question4: Question = Question(prompt="question 4", response="response 4")
+
+history: History = History(
+    previous_questions=[question1, question2],
+    current=question3,
+    remaining_questions=[question4],
+)
+
+history_as_list: list[Question] = (
+    history.previous_questions + [history.current] + history.remaining_questions
+)
+```
+
+Et voilà 🎉
+
+La modélisation que nous avons choisie nous assure que :
+- Notre liste ne sera jamais vide
+- La question courante fait forcément partie des questions possibles
+
+Évidemment ce n'est pas toujours aussi simple que ça et toujours possible facilement, mais il est toujours bon d'essayer au maximum d'éviter les états impossibles grâce à nos choix de modélisation. Moins nous avons de vérifications à faire en code, plus notre programme sera robuste.
+
+Tout ce qui est normalement impossible devrait l'être par le choix de notre modélisation autant que possible !
+
+Happy coding, et n'hésitez pas à me faire des retours sur mon [compte Mastodon](https://mamot.fr/@vjousse).
