@@ -16,7 +16,7 @@ Quand on a le choix entre :
 
 On devrait toujours privilégier la deuxième solution. Comme disait ma grand-mère « mieux vaut prévenir que guérir ! » 👵.
 
-Cet article va vous donner quelques exemples en _Elm_ et en _Python_ sur comment modéliser au mieux vos données pour ne pas rendre possible l'impossible. Je vous aurais bien mis du _Javascript_, mais heu, j'accepte [les Pull Requests avec plaisir sur cet article](#) 😇
+Cet article va vous donner quelques exemples en _Elm_ et en _Python_ sur comment modéliser au mieux vos données pour ne pas rendre possible l'impossible. Je vous aurais bien mis du _Javascript_, mais heu, j'accepte [les Pull Requests avec plaisir sur cet article](https://github.com/vjousse/pereprogramming/blob/main/content/articles/elm-python-rendre-impossibles-les-etats-impossibles/index.md) 😇
 
 <!-- more -->
 
