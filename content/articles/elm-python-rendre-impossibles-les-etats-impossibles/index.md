@@ -4,7 +4,7 @@ date=2022-06-02T08:00:03+01:00
 
 [taxonomies]
 author = ["Vincent Jousse"]
-tags = ["elm", "python"]
+tags = ["elm", "python", "typescript"]
 +++
 
 _Cet article est fortement inspiré de la vidéo de [Richard Feldman - Making Impossible States Impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8)_
@@ -16,7 +16,7 @@ Quand on a le choix entre :
 
 On devrait toujours privilégier la deuxième solution. Comme disait ma grand-mère « mieux vaut prévenir que guérir ! » 👵.
 
-Cet article va vous donner quelques exemples en _Elm_ et en _Python_ sur comment modéliser au mieux vos données pour ne pas rendre possible l'impossible. Je vous aurais bien mis du _Javascript_, mais heu, j'accepte [les Pull Requests avec plaisir sur cet article](https://github.com/vjousse/pereprogramming/blob/main/content/articles/elm-python-rendre-impossibles-les-etats-impossibles/index.md) 😇
+Cet article va vous donner quelques exemples en _Elm_ et en _Python_ sur comment modéliser au mieux vos données pour ne pas rendre possible l'impossible.
 
 <!-- more -->
 
@@ -24,7 +24,7 @@ Cet article va vous donner quelques exemples en _Elm_ et en _Python_ sur comment
 
 J'ai des fois tendance à me retrouver avec une modélisation de données qui peut être dans des états qui devraient être impossibles.
 
-Par exemple, prenons une liste de questions (représentée par une liste de strings), puis une liste de réponses (représentée par une liste de string ou d'absence de valeur) associées à ces questions.
+Par exemple, prenons une liste de questions (représentée par une liste de strings), puis une liste de réponses (représentée par une liste de strings ou d'absence de valeur) associées à ces questions.
 
 Imaginons en _Python_ ça pourrait donner ça :
 
@@ -33,7 +33,7 @@ questions: list[str] = ["question 1", "question 2", "question 3"]
 responses: list[str|None] = ["response 1", "response 2", None]
 ```
 
-> Note: si vous n'avez pas l'habitude des _type annotations_ en Python, `List[str|None]` signifie _une liste contenant des string ou des None_. Le `|` a été ajouté avec Python 3.10, avant Python 3.10 vous pouvez obtenir la même chose avec `Union[str, None]`
+> Note: si vous n'avez pas l'habitude des _type annotations_ en Python, `List[str|None]` signifie _une liste contenant des strings ou des None_. Le `|` a été ajouté avec Python 3.10, avant Python 3.10 vous pouvez obtenir la même chose avec `Union[str, None]`
 
 Et en _Elm_ ça :
 
@@ -55,6 +55,12 @@ Et en _Elm_ ça :
 }
 ```
 
+Enfin, en Typescript :
+```typescript
+const questions: [string] = ["question 1", "question 2", "question 3"]
+const responses: [string|null] = ["response 1", "response 2", null]
+```
+
 Le souci ici, c'est que rien dans notre modélisation ne nous empêche d'avoir des réponses sans questions.
 
 _Python_
@@ -73,6 +79,12 @@ _Elm_
     , Nothing
     ]
 }
+```
+
+_Typescript_
+```typescript
+const questions: [string] = []
+const responses: [string|null] = ["response 1", "response 2", null]
 ```
 
 Ça sent le bug à plein nez non ? Qu'est-ce que notre application est censée faire de ça ? Vous allez me dire « oui mais bon, je ferai attention quand je mettrai à jour mes questions de bien mettre à jour mes réponses aussi en fonction ». Lorsque votre cerveau vous propose ce type de solution, voici la bonne posture à adopter :
@@ -124,6 +136,19 @@ questions =
     ]
 ```
 
+_Typescript_
+```typescript
+type Question = {
+    prompt: string,
+    response: string | null,
+}
+const questions: [Question] = [
+    { prompt: "question 1", response: "response 1" },
+    { prompt: "question 2", response: "response 2" },
+    { prompt: "question 3", response: null },
+]
+```
+
 La modélisation de nos données rend maintenant impossible le fait d'avoir une question sans réponse !
 
 Cet exemple est assez simple mais vous comprenez le principe : à chaque fois qu'on modélise quelque chose, il est bon de se poser la question si notre modélisation permet, ou pas, des états qui devraient être impossibles.
@@ -169,7 +194,7 @@ _Elm_
 
 ```elm
 type alias History =
-    { questions : List question
+    { questions : List Question
     , current : Question
     }
 
@@ -177,6 +202,23 @@ type alias History =
 
 { questions = [question1, question2, question3]
 , current = question1
+}
+```
+
+
+_Typescript_
+
+```typescript
+type History = { 
+    questions: [Question],
+    current : Question,
+}
+
+-- Rest of the code
+
+{ 
+    questions: [question1, question2, question3],
+    current: question1,
 }
 ```
 
@@ -193,6 +235,15 @@ _Elm_
 ```elm
 { questions = []
 , current = question1
+}
+```
+
+_Typescript_
+
+```typescript
+{ 
+    questions = [],
+    current = question1,
 }
 ```
 
@@ -217,6 +268,16 @@ type alias History =
     , otherQuestions : List Question
     , current : Question
     }
+```
+
+_Typescript_
+
+```typescript
+type History = { 
+    first: Question,
+    otherQuestions: [Question],
+    current: Question,
+}
 ```
 
 Bon c'est mieux car on ne peut plus avoir de liste vide. MAIS ⚠️ (car évidemment il y a un mais), ça ne nous empêche toujours pas d'avoir une question courante qui ne fait pas partie des questions possibles.
@@ -249,6 +310,18 @@ _Elm_
 }
 ```
 
+Enfin en Typescript :
+
+_Typescript_
+
+```typescript
+type History = { 
+    first: Question,
+    otherQuestions: [Question],
+    current: Question,
+}
+```
+
 Pour pallier à ce problème, nous allons utiliser la modélisation suivante :
 
 
@@ -272,6 +345,15 @@ type alias History =
     , current : Question
     , remainingQuestions : List Question
     }
+```
+
+_Typescript_
+```typescript
+type History = { 
+    previousQuestion: [Question],
+    current: Question,
+    remainingQuestions: [Question],
+}
 ```
 
 La liste complète des questions sera alors obtenue par la concaténation des questions précédentes, de la courante et de celles qui reste. L'idée étant de faire `previous_questions + [current] + remaining_questions` pour constituer notre liste de questions.
