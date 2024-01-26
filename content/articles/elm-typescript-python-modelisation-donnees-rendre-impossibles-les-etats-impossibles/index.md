@@ -1,5 +1,5 @@
 +++
-title="Python, Elm et modélisation de données : rendre impossibles les états impossibles"
+title="Python, Typescript, Elm et modélisation de données : rendre impossibles les états impossibles"
 date=2022-06-02T08:00:03+01:00
 
 [taxonomies]
