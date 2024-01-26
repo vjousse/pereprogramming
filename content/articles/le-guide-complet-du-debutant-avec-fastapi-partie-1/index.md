@@ -11,20 +11,21 @@ tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
 
 Commençons par le commencement.
 
-FastAPI est un framework de __développement Web__ écrit en Python. Il est très polyvalent et va permettre de développer :
-- Des __sites internet « classiques »__ avec juste du contenu
-- Des __sites dynamiques__ avec formulaires et gestion des utilisateurs
-- La partie « cachée » des __applications mobiles iOS ou Android__, que l'on appelle une __API__. Vous entendrez aussi parler de __backend__, ce n'est pas tout à fait la même chose, mais on va faire comme-ci pour l'instant.
-- Des applications en __temps réel__ comme peuvent l'être les applications de discussion, les cours de la bourse, etc. Vous entendrez souvent parler de __WebSocket__ pour ces applications, on y reviendra.
-- Les interfaces d'accès des applications de __Machine Learning__ et d'__Intelligence Artificielle__ qui sont majoritairement développées en Python.
+FastAPI est un framework de **développement Web** écrit en Python. Il est très polyvalent et va permettre de développer :
 
-L'idée d'utiliser un framework va être de __ne pas réinventer la roue__ et de se baser sur ce que d'autres personnes talentueuses ont fait avant nous pour résoudre les problèmes classiques des applications web : gestion de la base de données, des URL, de la sécurité des formulaires, des sessions, etc.
+- Des **sites internet « classiques »** avec juste du contenu
+- Des **sites dynamiques** avec formulaires et gestion des utilisateurs
+- La partie « cachée » des **applications mobiles iOS ou Android**, que l'on appelle une **API**. Vous entendrez aussi parler de **backend**, ce n'est pas tout à fait la même chose, mais on va faire comme-ci pour l'instant.
+- Des applications en **temps réel** comme peuvent l'être les applications de discussion, les cours de la bourse, etc. Vous entendrez souvent parler de **WebSocket** pour ces applications, on y reviendra.
+- Les interfaces d'accès des applications de **Machine Learning** et d'**Intelligence Artificielle** qui sont majoritairement développées en Python.
 
-FastAPI est un framework assez __récent__ puisque sa première version date de __décembre 2018__. C'est d'ailleurs pour cela que je le choisis maintenant pour la majorité de mes projets : il se base sur une __version récente de Python (minimum 3.6)__ et en tire tous les bénéfices que nous verrons un peu plus tard (simplicité et rapidité notamment).
+L'idée d'utiliser un framework va être de **ne pas réinventer la roue** et de se baser sur ce que d'autres personnes talentueuses ont fait avant nous pour résoudre les problèmes classiques des applications web : gestion de la base de données, des URL, de la sécurité des formulaires, des sessions, etc.
 
-Il est entre autres utilisé dans de __grosses entreprises__ comme [__Microsoft__](https://github.com/tiangolo/fastapi/pull/26#issuecomment-463768795), [__Uber__](https://eng.uber.com/ludwig-v0-2/) ou encore [__Netflix__](https://netflixtechblog.com/introducing-dispatch-da4b8a2a8072).
+FastAPI est un framework assez **récent** puisque sa première version date de **décembre 2018**. C'est d'ailleurs pour cela que je le choisis maintenant pour la majorité de mes projets : il se base sur une **version récente de Python (minimum 3.6)** et en tire tous les bénéfices que nous verrons un peu plus tard (simplicité et rapidité notamment).
 
-Et pourquoi pas __Django__ ou __framework X__ ? Tout simplement pour les raisons citées ci-dessus. __FastAPI__ est pour moi le [Framework d'avenir en Python](/articles/le-meilleur-framework-web-python/). Donc quitte à apprendre quelque chose, autant apprendre quelque chose sur lequel vous pourrez __capitaliser pour votre futur__ : FastAPI est parfait pour ça.
+Il est entre autres utilisé dans de **grosses entreprises** comme [**Microsoft**](https://github.com/tiangolo/fastapi/pull/26#issuecomment-463768795), [**Uber**](https://eng.uber.com/ludwig-v0-2/) ou encore [**Netflix**](https://netflixtechblog.com/introducing-dispatch-da4b8a2a8072).
+
+Et pourquoi pas **Django** ou **framework X** ? Tout simplement pour les raisons citées ci-dessus. **FastAPI** est pour moi le [Framework d'avenir en Python](/articles/le-meilleur-framework-web-python/). Donc quitte à apprendre quelque chose, autant apprendre quelque chose sur lequel vous pourrez **capitaliser pour votre futur** : FastAPI est parfait pour ça.
 
 ## Installation
 
@@ -39,10 +40,9 @@ $ python --version
 Python 3.9.5
 ```
 
-> __Attention__ : dans tous les exemples de code comme celui ci-dessus, les commandes commenceront toujours par `$` et le résultat sera le contenu des lignes en dessous.
+> **Attention** : dans tous les exemples de code comme celui ci-dessus, les commandes commenceront toujours par `$` et le résultat sera le contenu des lignes en dessous.
 >
 > Dans les exemples qui seront donnés, ne tapez donc pas le `$` mais uniquement ce qui se trouve après, dans notre cas `python --version`
-
 
 ### Installer `pip` et `virtualenv`
 
@@ -55,13 +55,13 @@ $ python -m pip --version
 pip 20.3.1 from /usr/lib/python3.9/site-packages/pip (python 3.9)
 ```
 
-Si vous l'avez, il vous affichera un numéro de version comme dans l'exemple ci-dessus (le numéro de version en lui-même n'est pas très important). Si ce n'est pas le cas, téléchargez le fichier `get-pip.py` et installez-le via Python :
+Si vous l'avez, il vous affichera un numéro de version comme dans l'exemple ci-dessus (le numéro de version en lui-même n'est pas très important). Si ce n'est pas le cas, téléchargez le fichier [`get-pip.py`](https://bootstrap.pypa.io/get-pip.py) et installez-le via Python :
 
 ```
 $ sudo python get-pip.py
 ```
 
-Maintenant que vous avez `pip` on va pouvoir installer un autre logiciel nommé `virtualenv`. `virtualenv` va permettre d'isoler votre projet et ses dépendances au sein d'un environnement dédié, séparé de votre environnement système. Cela va avoir l'avantage de __ne pas créer de conflits__ avec les versions et les dépendances Python de votre système, mais aura aussi l'avantage de rendre votre projet facilement utilisable/installable sur une autre machine.
+Maintenant que vous avez `pip` on va pouvoir installer un autre logiciel nommé `virtualenv`. `virtualenv` va permettre d'isoler votre projet et ses dépendances au sein d'un environnement dédié, séparé de votre environnement système. Cela va avoir l'avantage de **ne pas créer de conflits** avec les versions et les dépendances Python de votre système, mais aura aussi l'avantage de rendre votre projet facilement utilisable/installable sur une autre machine.
 
 ```
 $ sudo pip install virtualenv
@@ -88,9 +88,9 @@ Cela devrait vous ajouter `(venv)` au début de votre ligne de commandes, cf ci-
 
 ![Activation du virtualenv](images/virtualenv_activation.png)
 
-> __Attention__ : vous devrez l'activer à chaque fois que vous ouvrez un nouveau terminal. Pour pouvoir exécuter les commandes dont nous parlerons plus tard, vous __devez__ avoir le `(venv)` qui s'affiche au début de votre ligne.
+> **Attention** : vous devrez l'activer à chaque fois que vous ouvrez un nouveau terminal. Pour pouvoir exécuter les commandes dont nous parlerons plus tard, vous **devez** avoir le `(venv)` qui s'affiche au début de votre ligne.
 
-Les commandes ci-dessus ont créé un répertoire nommé `venv` dans votre répertoire courant. Ce répertoire contient une __copie locale de Python et `pip`__. Toutes les dépendances que vous installerez via `pip` seront installées dans ce répertoire à côté de votre copie locale de Python. Cela évitera de venir perturber l'installation globale de Python sur votre système.
+Les commandes ci-dessus ont créé un répertoire nommé `venv` dans votre répertoire courant. Ce répertoire contient une **copie locale de Python et `pip`**. Toutes les dépendances que vous installerez via `pip` seront installées dans ce répertoire à côté de votre copie locale de Python. Cela évitera de venir perturber l'installation globale de Python sur votre système.
 
 Vous pouvez désactiver l'environnement virtuel en fermant votre terminal ou en utilisant la commande ci-dessous :
 
@@ -128,7 +128,7 @@ async def root():
     return {"message": "Hello World"}
 ```
 
-Pour pouvoir éxécuter le code ci-dessus et afficher le message _Hello World_ dans une fenêtre de votre navigateur, il va falloir pour ce faire lancer un __serveur Web__. Le serveur Web est ce qui va faire l'interface entre votre navigateur et votre programme FastAPI. On dit qu'il va recevoir les ___requêtes HTTP___ envoyées par votre navigateur (notamment lorsque vous entrez une adresse dans la barre d'adresse) et qu'il va les transférer à FastAPI. FastAPI va ensuite être en charge de construire la ___réponse HTTP___ qui sera envoyée en retour au navigateur. Votre navigateur affichera finalement le contenue de cette ___réponse HTTP___.
+Pour pouvoir éxécuter le code ci-dessus et afficher le message _Hello World_ dans une fenêtre de votre navigateur, il va falloir pour ce faire lancer un **serveur Web**. Le serveur Web est ce qui va faire l'interface entre votre navigateur et votre programme FastAPI. On dit qu'il va recevoir les **_requêtes HTTP_** envoyées par votre navigateur (notamment lorsque vous entrez une adresse dans la barre d'adresse) et qu'il va les transférer à FastAPI. FastAPI va ensuite être en charge de construire la **_réponse HTTP_** qui sera envoyée en retour au navigateur. Votre navigateur affichera finalement le contenue de cette **_réponse HTTP_**.
 
 Dans notre cas, nous allons utiliser un serveur web nommé `uvicorn`, parfaitement adapté pour FastAPI.
 
@@ -149,9 +149,8 @@ INFO:     Application startup complete.
 Vous pouvez maintenant vous rendre à l'adresse [http://127.0.0.1:8000](http://127.0.0.1:8000) et voir s'afficher :
 
 ```json
-{"message":"Hello World"}
+{ "message": "Hello World" }
 ```
-
 
 ![Hello World](images/hello_world.png)
 
@@ -162,23 +161,26 @@ Si c'est le cas, vous venez d'exécuter votre première application web écrite 
 Prenons le temps de décortiquer ce petit bout de code Python.
 
 - Import de la classe `FastAPI` du package `fastapi` installé plus haut avec `pip`
+
 ```python
 from fastapi import FastAPI
 ```
 
 - Création de l'objet `FastAPI` que l'on stocke sous le nom `app`
+
 ```python
 app = FastAPI()
 ```
 
-
 - Paramétrage de la fonction nommée `root` via la ligne `@app.get("/")` (on parle de [décorateur](https://python.doctor/page-decorateurs-decorator-python-cours-debutants) en Python). Ce paramétrage permet de dire : _lorsque mon application FastAPI reçoit une requête pour l'adresse `/` et la méthode HTTP `get`, exécuter la fonction `root()` définie en dessous_. Nous verrons un peu plus tard ce que sont les méthodes HTTP, ne vous inquiétez pas.
+
 ```python
 @app.get("/")
 async def root():
 ```
 
 - Pour finir, nous retournons un dictionnaire Python classique `{"message": "Hello World"}`. FastAPI se chargera de transformer, par défaut, ce dictionnaire en objet et en réponse JSON.
+
 ```python
     return {"message": "Hello World"}
 ```
