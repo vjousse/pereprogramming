@@ -7,6 +7,8 @@ author = ["Vincent Jousse"]
 tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
 +++
 
+_Mise à jour le 26/01/2024_
+
 ## Pourquoi FastAPI ?
 
 Commençons par le commencement.
@@ -31,13 +33,13 @@ Et pourquoi pas **Django** ou **framework X** ? Tout simplement pour les raison
 
 ### Installer Python 3.6+
 
-Il va vous falloir une version récente de Python, a minima la 3.6. La manière de l'installer dépendra de votre système d'exploitation en fonction de si vous êtes sous Windows, Linux ou Mac OS X. Je ne vais pas rentrer dans les détails ici, mais l'idée est d'aller sur le [site officiel de Python](https://www.python.org/download/) et de télécharger puis installer la version la plus récente. À la date d'écriture de cet article c'est la version 3.9.5.
+Il va vous falloir une version récente de Python, a minima la 3.6. La manière de l'installer dépendra de votre système d'exploitation en fonction de si vous êtes sous Windows, Linux ou Mac OS X. Je ne vais pas rentrer dans les détails ici, mais l'idée est d'aller sur le [site officiel de Python](https://www.python.org/download/) et de télécharger puis installer la version la plus récente. À la date d'écriture de cet article c'est la version 3.12.1.
 
 Il faudra que, dans votre terminal ou invite de commandes, la version de Python affichée avec la commande `python --version` soit celle que vous avez téléchargée. Dans mon cas :
 
 ```
 $ python --version
-Python 3.9.5
+Python 3.11.5
 ```
 
 > **Attention** : dans tous les exemples de code comme celui ci-dessus, les commandes commenceront toujours par `$` et le résultat sera le contenu des lignes en dessous.
@@ -52,7 +54,7 @@ Tout d'abord, vérifiez si vous avez `pip` d'installé :
 
 ```
 $ python -m pip --version
-pip 20.3.1 from /usr/lib/python3.9/site-packages/pip (python 3.9)
+pip 23.3.2 from /home/vjousse/.asdf/installs/python/3.11.5/lib/python3.11/site-packages/pip (python 3.11)
 ```
 
 Si vous l'avez, il vous affichera un numéro de version comme dans l'exemple ci-dessus (le numéro de version en lui-même n'est pas très important). Si ce n'est pas le cas, téléchargez le fichier [`get-pip.py`](https://bootstrap.pypa.io/get-pip.py) et installez-le via Python :
@@ -61,22 +63,13 @@ Si vous l'avez, il vous affichera un numéro de version comme dans l'exemple ci-
 $ sudo python get-pip.py
 ```
 
-Maintenant que vous avez `pip` on va pouvoir installer un autre logiciel nommé `virtualenv`. `virtualenv` va permettre d'isoler votre projet et ses dépendances au sein d'un environnement dédié, séparé de votre environnement système. Cela va avoir l'avantage de **ne pas créer de conflits** avec les versions et les dépendances Python de votre système, mais aura aussi l'avantage de rendre votre projet facilement utilisable/installable sur une autre machine.
-
-```
-$ sudo pip install virtualenv
-```
-
-Notez les `sudo` dans les deux commandes ci-dessus. Cela va installer `pip` et `virtualenv` au niveau de votre système d'exploitation.
+Maintenant que vous avez `pip` nous allons pouvoir créer un `virtualenv`. Un `virtualenv` va permettre d'isoler votre projet et ses dépendances au sein d'un environnement dédié, séparé de votre environnement système. Cela va avoir l'avantage de **ne pas créer de conflits** avec les versions et les dépendances Python de votre système, mais aura aussi l'avantage de rendre votre projet facilement utilisable/installable sur une autre machine.
 
 Il est maintenant temps de créer notre premier environnement virtuel et notre premier projet. Créez un répertoire pour votre projet puis déplacez-vous dedans. Créez ensuite votre environnement virtuel avec la commande ci-dessous.
 
 ```
-$ virtualenv venv -p python
+$ python -m venv venv
 ```
-
-Vous devriez obtenir un résultat de ce type :
-![Création du virtualenv](images/virtualenv_creation.png)
 
 Une fois votre environnement virtuel créé, il faut que vous l'activiez grâce à la commande suivante :
 
@@ -102,7 +95,7 @@ Gardons-le activé pour l'instant.
 
 ### Installer FastAPI
 
-Les choses sérieuses commencent. Assurez vous que vous aviez bien activé votre virtualenv (notez le `(venv)` avant votre ligne de commande) et tapez la commande suivante :
+Les choses sérieuses commencent. Assurez vous que vous avez bien activé votre virtualenv (notez le `(venv)` avant votre ligne de commande) et tapez la commande suivante :
 
 ```
 (venv) $ pip install fastapi[all]

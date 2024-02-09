@@ -11,14 +11,18 @@ J'ai toujours aimé apprendre par l'exemple et ce guide ne dérogera pas à la r
 
 <!-- more -->
 
+_Mise à jour le 26/01/2024 : Tortoise n'étant pas activement maintenu, j'ai décidé de passer le tutorial de Tortoise ORM à SQL Alchemy_
+
 ## Projet : une newsletter à la Substack
 
 Les principales fonctionnalités que nous développerons :
+
 - Création d'articles
 - Envoi des articles par email
 - Gestion des utilisateurs avec inscription et authentification
 
 Plein de bonus possibles :
+
 - Gestion du multilingue
 - Traduction automatique des articles
 - Commentaires sur les articles
@@ -26,7 +30,7 @@ Plein de bonus possibles :
 
 ### Structure de notre projet FastAPI
 
-À la différence de beaucoup de Framework, FastAPI n'impose __aucune structure de répertoires__ ou de fichiers pour pouvoir fonctionner. Quelques __conventions__ se dégagent cependant parmi tous les projets disponibles. Voici celle que nous allons adopter :
+À la différence de beaucoup de Framework, FastAPI n'impose **aucune structure de répertoires** ou de fichiers pour pouvoir fonctionner. Quelques **conventions** se dégagent cependant parmi tous les projets disponibles. Voici celle que nous allons adopter :
 
 ```
 fastapi-beginners-guide/   <-- répertoire racine de notre projet
@@ -74,7 +78,6 @@ $ source ./venv/bin/activate
 
 Assurez-vous ensuite que vous pouvez lancer `uvicorn` avec la commande suivante :
 
-
 ```
 (venv) $ uvicorn app.main:app --reload
 ```
@@ -121,16 +124,15 @@ Décortiquons ce que nous venons de faire.
 app.mount("/static", StaticFiles(directory="public"), name="public")
 ```
 
-Nous « _montons_ » (`app.mount`) une route qui va répondre à l'URL `/static` et qui servira, sous cette adresse, les fichiers que nous mettrons dans le répertoire `public/` précédemment créé (`directory="public"`). Nous nommons cette route `public` (`name="public"`), car nous aurons besoin de l'appeler par son nom pour nous en servir un peu plus loin. Toto aurait aussi fonctionné comme nom, mais c'est moins parlant 😉
+Nous « *montons* » (`app.mount`) une route qui va répondre à l'URL `/static` et qui servira, sous cette adresse, les fichiers que nous mettrons dans le répertoire `public/` précédemment créé (`directory="public"`). Nous nommons cette route `public` (`name="public"`), car nous aurons besoin de l'appeler par son nom pour nous en servir un peu plus loin. Toto aurait aussi fonctionné comme nom, mais c'est moins parlant 😉
 
-__En résumé__ : Si nous plaçons un fichier nommé `styles.css` dans notre répertoire `public/`, cette route va nous permettre d'y accéder par l'adresse `http://localhost:8000/public/styles.css`.
+**En résumé** : Si nous plaçons un fichier nommé `styles.css` dans notre répertoire `public/`, cette route va nous permettre d'y accéder par l'adresse `http://localhost:8000/public/styles.css`.
 
 ```python
 templates = Jinja2Templates(directory="app/templates")
 ```
 
 Nous créons un objet (`templates`) qui va nous permettre de créer de l'HTML avec le moteur de templates [Jinja2](https://jinja2docs.readthedocs.io/en/stable/). Cet objet ira chercher ses templates dans le répertoire que nous avons créé, `app/templates/`.
-
 
 ```python
 @app.get("/")
@@ -161,6 +163,7 @@ Il nous faut ensuite créer le contenu du template dans `app/templates/home.html
 ```
 
 Outre le code HTML classique, la première ligne intéressante est la suivante :
+
 ```jinja
 <link href="{{ url_for('public', path='/styles.css') }}" rel="stylesheet">
 ```
@@ -168,9 +171,11 @@ Outre le code HTML classique, la première ligne intéressante est la suivante 
 Nous construisons un lien dynamique grâce à la fonction `url_for`. Cette fonction prend en paramètres le nom de la route, `public` dans notre cas (le nom que nous avions donné plus haut, lors du `app.mount`) et l'emplacement du fichier, `path='/styles.css'`, qu'il nous restera à créer. Avec Jinja, tout ce qui est entre `{{` et `}}` sera affiché dans le code HTML.
 
 L'autre ligne intéressante est celle-ci :
+
 ```jinja
 <p>Current url: <strong>{{ request.url }}</strong></p>
 ```
+
 Ici nous nous servons de l'objet `request` de starlette que nous avions passé à notre template (`templates.TemplateResponse("home.html", {"request": request})`) pour afficher l'url courante.
 
 Il nous reste à créer le fichier `styles.css` dans le répertoire `public/` et d'y mettre le contenu suivant par exemple :
@@ -185,21 +190,22 @@ Rechargez votre page d'accueil à l'adresse [http://localhost:8000/](http://loca
 
 ![Page d'accueil Jinja](images/home.png)
 
-## Interaction avec la base de données : écriture des modèles avec Tortoise ORM
+## Interaction avec la base de données : écriture des modèles avec SQLAlchemy 2.0
 
-Maintenant que nous arrivons à afficher quelque chose, il est temps de passer à la création de nos __modèles de base de données__. Ces modèles sont des classes spéciales Python qui vont nous aider à créer/modifier/supprimer des lignes dans la base de données.
+Maintenant que nous arrivons à afficher quelque chose, il est temps de passer à la création de nos **modèles de base de données**. Ces modèles sont des classes spéciales Python qui vont nous aider à créer/modifier/supprimer des lignes dans la base de données.
 
-Il y a plusieurs façon d'interagir avec une base de données. La façon classique est d'écrire des __requêtes SQL__ directement par vous-même en fabricant vos propres `SELECT * FROM …` et autres `UPDATE … SET …`. C'est faisable, mais ce n'est pas ce que l'on voit le plus souvent et c'est assez fastidieux. Je vais ici vous présenter une autre approche : l'utilisation d'un _Object Relational Mapper_ (__ORM__). C'est ce que vous verrez dans quasiment tous les frameworks. Je ne rentrerai pas ici dans le débat sur l'efficacité ou non des ORM (car débat il y a) et j'adopterai juste une approche pragmatique : c'est ce que la majorité utilise, nous ferons donc pareil ici.
+Il y a plusieurs façon d'interagir avec une base de données. La façon classique est d'écrire des **requêtes SQL** directement par vous-même en fabricant vos propres `SELECT * FROM …` et autres `UPDATE … SET …`. C'est faisable, mais ce n'est pas ce que l'on voit le plus souvent et c'est assez fastidieux. Je vais ici vous présenter une autre approche : l'utilisation d'un _Object Relational Mapper_ (**ORM**). C'est ce que vous verrez dans quasiment tous les frameworks. Je ne rentrerai pas ici dans le débat sur l'efficacité ou non des ORM (car débat il y a) et j'adopterai juste une approche pragmatique : c'est ce que la majorité utilise, nous ferons donc pareil ici.
 
-Pour faire simple, les ORMs font vous permettre de faire du SQL et de créer vos propres requêtes SQL __sans écrire une ligne de SQL__, juste en manipulant des objets Python classiques.
+Pour faire simple, les ORMs vont vous permettre de faire du SQL et de créer vos propres requêtes SQL **sans écrire une ligne de SQL**, juste en manipulant des objets Python classiques.
 
 Il existe beaucoup d'ORMs différents en Python :
-- L'[ORM de Django](https://docs.djangoproject.com/fr/3.2/topics/db/) lui est spécifique et ne peut pas être facilement utilisé en dehors de Django
-- [SqlAlchemy](https://www.sqlalchemy.org/) est l'ORM standard de Python utilisé un peu partout. Il est très (trop ?) complet.
+
+- L'[ORM de Django](https://docs.djangoproject.com/fr/5.0/topics/db/) lui est spécifique et ne peut pas être facilement utilisé en dehors de Django
+- [SqlAlchemy](https://www.sqlalchemy.org/) est l'ORM standard de Python utilisé un peu partout
 - [peewee](http://docs.peewee-orm.com/en/latest/) un ORM simple et donc facile à apprendre
 - [Tortoise ORM](https://tortoise-orm.readthedocs.io/) est un ORM inspiré de Django mais qui utilise les dernières avancées de Python (comme FastAPI), notamment `asyncio`.
 
-Mon choix s'est porté sur [Tortoise ORM](https://tortoise-orm.readthedocs.io/) car je trouve qu'il est développé dans le même esprit que FastAPI : __se baser sur ce qui était bien fait dans le passé__ (dans ce cas l'API de l'ORM de Django) tout en __modernisant l'approche__ (dans ce cas en utilisant les fonctionnalités asynchrones des dernières version de Python).
+Mon choix s'est porté sur [SqlAlchemy](https://www.sqlalchemy.org/) car c'est celui que vous serez amenés à rencontrer le plus souvent. Il vient (janvier 2023) d'être mis à jour en version 2.0, c'est cette version que nous utiliserons dans ce tutoriel. Attention si vous cherchez des exemples de code sur le net, la plupart des exemples utilise encore la syntaxe 1.0 (qui reste compatible avec la 2.0).
 
 > Pour les besoins de ce guide, nous allons pour l'instant utiliser une base de données simple qui ne nécessite pas d'autres logiciels à installer : [SQLite](https://www.sqlite.org/index.html). Nous verrons plus tard lorsque nous passerons à _Docker_ comment utiliser une base de données bien plus robuste, à savoir [PostgreSQL](https://www.postgresql.org/).
 
@@ -211,22 +217,29 @@ Soyez bien certain d'avoir activé votre environnement virtuel :
 $ source ./venv/bin/activate
 ```
 
-Puis installez Tortoise ORM.
+Puis installez SQLAlchemy.
 
 ```
-(venv) $ pip install tortoise-orm
+(venv) $ pip install sqlalchemy
 ```
 
 ### Création du modèle Article
 
 Nous allons ajouter un premier modèle à notre application. Ce modèle va représenter un article dans notre Newsletter. Il aura donc les champs classiques auxquels l'on pourrait s'attendre : titre, contenu, etc.
 
+Mettons à jour notre fichier `main.py` dans ce sens.
+
 ```python
+# app/main.py
+
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from tortoise import fields
-from tortoise.models import Model
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+
 
 app = FastAPI()
 
@@ -234,63 +247,70 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 
 templates = Jinja2Templates(directory="app/templates")
 
+Base = declarative_base()
 
-class Article(Model):
 
-    id = fields.IntField(pk=True)
+class Article(Base):
+    __tablename__ = "articles"
 
-    title = fields.TextField()
-    content = fields.TextField()
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    content = Column(String)
 
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    created_at = Column(String, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __str__(self):
         return self.title
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
-    return templates.TemplateResponse(
-        "home.html",
-        {
-            "request": request
-        })
 ```
 
-Tout d'abord, nous importons les classes nécessaires de Tortoise :
+Tout d'abord, nous importons les classes nécessaires de SQLAlchemy :
 
 ```python
-from tortoise import fields
-from tortoise.models import Model
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
 ```
 
-Ensuite, nous définissons notre modèle, que nous allons nommer `Article` et qui hérite des modèles (`Model`) par défaut de Tortoise :
-
+Ensuite, nous créens la classe de `Base` de SQLAlchemy qui va permettre la définition de tous nos modèles ensuite.
 
 ```python
-class Articles(Model):
+Base = declarative_base()
 ```
 
-Nous déclarons ici la clé primaire de notre modèle, de type `IntField`. Le `pk=True` va permettre de considérer le champs comme clé primaire et va générer la prochaine valeur automatiquement de manière incrémentale. Ce n'est pas quelque chose d'obligatoire puisque si nous ne le faisons pas, Tortoise créera un champ `id` automatiquement pour nous. Mais je préfère toujours le faire de manière explicite.
+Puis nous définissons notre modèle, que nous allons nommer `Article` et qui hérite de la classe de base (`Base`) de SQLAlchemy :
 
 ```python
-    id = fields.IntField(pk=True)
+class Article(Base):
+
 ```
 
-Nous déclarons ensuite nos champs de contenu, qui sont tous les deux de type `TextField`.
+Nous déclarons ici la clé primaire de notre modèle, de type `Integer`. Le `primary_key=True` va permettre de considérer le champ comme clé primaire et va générer la prochaine valeur automatiquement de manière incrémentale. Ce n'est pas quelque chose d'obligatoire puisque si nous ne le faisons pas.
 
 ```python
-    title = fields.TextField()
-    content = fields.TextField()
+    id = Column(Integer, primary_key=True)
 ```
 
-Je trouve toujours utile d'avoir la date de création de mes objets ainsi que leur dernière date de modification. Pour ce faire j'ai rajouté les deux champs `created_at` et `updated_at` qui seront automatiquement mis à jour par Tortoise :
+Nous déclarons ensuite nos champs de contenu, qui sont tous les deux de type `String`.
 
 ```python
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    title = Column(String)
+    content = Column(String)
+
+```
+
+Je trouve toujours utile d'avoir la date de création de mes objets ainsi que leur dernière date de modification. Pour ce faire j'ai rajouté les deux champs `created_at` et `updated_at` qui seront automatiquement mis à jour par la base de données. `server_default` permet de dire à la base de données d'éxécuter une fonction à la création de l'objet. Dans notre cas, ça sera la fonction `now()` de la base de données qui retourne la date et l'heure courantes. `onupdate` permet de faire pareil, mais lors de la mise à jour de l'objet.
+
+```python
+    created_at = Column(String, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 ```
 
 Et pour finir, je surcharge la méthode Python par défaut `__str__`.
@@ -302,22 +322,18 @@ Et pour finir, je surcharge la méthode Python par défaut `__str__`.
 
 Il n'est pas obligatoire de surcharger la fonction `__str__` mais c'est une bonne pratique qui nous permettra de faciliter notre debug plus tard. Quand on demandera à afficher l'objet, cela affichera son titre au lieu d'une représentation incompréhensible interne à Python.
 
-Il nous reste à déclarer Tortoise à notre application FastAPI. Pour ce faire nous allons rajouter cet import :
-
-```python
-from tortoise.contrib.fastapi import register_tortoise
-```
-
-Et enregistrer Tortoise auprès de notre application, directement après la déclaration des templates :
+Il nous reste à déclarer notre base de données SQLAlchemy et à créer notre base de données, voici le code mis à jour pour ce faire :
 
 ```python
 # app/main.py
+
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from tortoise import fields
-from tortoise.models import Model
-from tortoise.contrib.fastapi import register_tortoise
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
 
 app = FastAPI()
 
@@ -325,22 +341,49 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 
 templates = Jinja2Templates(directory="app/templates")
 
-register_tortoise(
-    app,
-    db_url="sqlite://db.sqlite3",
-    modules={"models": ["app.main"]},
-    generate_schemas=True,
-    add_exception_handlers=True,
-)
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
-# … reste du code
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+class Article(Base):
+    __tablename__ = "articles"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    content = Column(String)
+
+    created_at = Column(String, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    def __str__(self):
+        return self.title
+
+
+Base.metadata.create_all(bind=engine)
+
+
+@app.get("/", include_in_schema=False)
+async def root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
+
+
 ```
 
-Dans la partie `db_url` nous spécifions comment accéder à notre base de données, ici un fichier local SQLite, nommé `db.sqlite3` et qui se trouvera à la racine de notre application (là où `uvicorn` est lancé).
+Nous créons l'`engine` SQLAlchemy en lui précisant l'emplacement du fichier de base de données `sql_app.db` et nous créeons la classe `SessionLocal` qui nous permettra plus tard d'obtenir une connexion à la base de données. Le paramètre `check_same_thread` est une particularité de SQLite vis à vis de FastAPI que nous ne détaillerons pas ici pour des raisons de simplicité.
 
-L'argument `modules`  nous permet de spécifier à Tortoise où chercher nos modèles. Dans le cas présent, nous lui disons de chercher dans le module `app.main`, soit le fichier `main.py` situé dans le répertoire `app`.
+Il ne faut pas oublier de créer les tables **APRÈS** la déclaration des modèles avec la ligne suivante :
 
-Avec l'ajout du fichier de bases de données `db.sqlite3` qui sera créé automatiquement dans notre projet, nous allons avoir besoin de changer la commande pour lancer `uvicorn`. En effet, le paramètre `--reload` de la commande `uvicorn` relance uvicorn à chaque fois qu'un fichier est modifié, peu importe où. Le problème est qu'à chaque fois que l'on modifiera la base de données `uvicorn` se rechargera automatiquement ce qui va finir par être pénible. Il suffit donc de spécifier à uvicorn où sont les fichiers qu'il doit surveiller pour s'auto-relancer avec le paramètre `--reload-dir` comme ci-dessous :
+```python
+Base.metadata.create_all(bind=engine)
+```
+
+Avec l'ajout du fichier de bases de données `sql_app.db` qui sera créé automatiquement dans notre projet, nous allons avoir besoin de changer la commande pour lancer `uvicorn`. En effet, le paramètre `--reload` de la commande `uvicorn` relance uvicorn à chaque fois qu'un fichier est modifié, peu importe où. Le problème est qu'à chaque fois que l'on modifiera la base de données `uvicorn` se rechargera automatiquement ce qui va finir par être pénible. Il suffit donc de spécifier à uvicorn où sont les fichiers qu'il doit surveiller pour s'auto-relancer avec le paramètre `--reload-dir` comme ci-dessous :
 
 ```
 (venv) $ uvicorn app.main:app --reload --reload-dir app
@@ -357,32 +400,24 @@ Créons une méthode qui, à chaque fois que l'on appelle l'url `/articles/creat
 
 # … début du fichier
 
-@app.get("/articles/create")
-async def articles_create(request: Request):
-
-    article = await Article.create(
-        title="Mon titre de test",
-        content="Un peu de contenu<br />avec deux lignes"
+@app.get("/articles/create", include_in_schema=False)
+async def articles_create(request: Request, db: Session = Depends(get_db)):
+    article = Article(
+        title="Mon titre de test", content="Un peu de contenu<br />avec deux lignes"
     )
+    db.add(article)
+    db.commit()
+    db.refresh(article)
 
     return templates.TemplateResponse(
-        "articles_create.html",
-        {
-            "request": request,
-            "article": article
-        })
-```
-
-
-Il nous suffit d'appeler la méthode `create` sur notre modèle `Article` et de lui passer les arguments correspondant, ici `title` et `content`.
-
-Notez l'utilisation du mot clé `await` qui va dire à Python _d'attendre_ le résultat de la fonction create. La fonction `create` est en effet une fonction ___asynchrone___, c'est à dire que c'est une fonction qui est effectuée en parallèle de votre code et qui par défaut, va faire sa petite affaire de son côté, elle est non bloquante. Tout fonction asynchrone, non bloquante, doit être _attendue_ pour en récupérer son résultat.
-
-Si vous oubliez de le mettre, Python vous enverra une erreur de ce style :
+        "articles_create.html", {"request": request, "article": article}
+    )
 
 ```
-RuntimeWarning: coroutine 'Model.create' was never awaited
-```
+
+@TODO: plusieurs choses. Expliquer de Depends, inclure le code get_db
+
+Nous commençons par créer un objet `Article` puis nous l'ajouIl nous suffit d'appeler la méthode `create` sur notre modèle `Article` et de lui passer les arguments correspondant, ici `title` et `content`.
 
 Nous passons ensuite notre objet nouvellement créé à un template nommé `articles_create.html` que vous allez créer dès maintenant dans `app/templates/articles_create.html` avec le contenu suivant :
 
@@ -408,7 +443,7 @@ Nous passons ensuite notre objet nouvellement créé à un template nommé `arti
 Ajoutons un point d'entrée pour pouvoir afficher la liste de nos articles dans une page HTML.
 
 ```python
-# 
+#
 @app.get("/articles")
 async def articles_list(request: Request):
 
@@ -452,7 +487,7 @@ Ci-dessous le résultat que vous devriez avoir (au nombre d'articles prêt).
 
 ### Liste des articles : API Json
 
-Afficher du HTML c'est chouette et c'est la base du web. Mais comme je l'ai déjà mentionné en introduction, FastAPI est parfait pour réaliser des __API__ (les parties cachées de vos applications mobiles notamment), et on aurait tort de s'en priver. Une Url d'API se comporte comme une URL web classique à la différence prêt qu'elle ne retourne pas de contenu HTML mais juste __des données brutes__.
+Afficher du HTML c'est chouette et c'est la base du web. Mais comme je l'ai déjà mentionné en introduction, FastAPI est parfait pour réaliser des **API** (les parties cachées de vos applications mobiles notamment), et on aurait tort de s'en priver. Une Url d'API se comporte comme une URL web classique à la différence prêt qu'elle ne retourne pas de contenu HTML mais juste **des données brutes**.
 
 Notre premier _Hello World_ était déjà une URL de _type API_, nous allons faire de même pour créer une API qui retourne la liste de nos articles.
 
@@ -491,12 +526,12 @@ Vous devriez ensuite pouvoir appeler la commande `http` (dans votre virtualenv)�
 
 Et obtenir un résultat qui se rapproche de la capture d'écran ci-dessous :
 
-
 ![httpie](images/httpie.png)
 
-La première ligne nous rappelle que nous utilisons le protocole __HTTP__ dans sa version __1.1__ et que le serveur nous a renvoyé un code de __status 200__. Dans le protocole HTTP, ce code de status 200 signifie que tout c'est bien passé (d'où le __OK__ ensuite).
+La première ligne nous rappelle que nous utilisons le protocole **HTTP** dans sa version **1.1** et que le serveur nous a renvoyé un code de **status 200**. Dans le protocole HTTP, ce code de status 200 signifie que tout c'est bien passé (d'où le **OK** ensuite).
 
 Les 4 lignes qui suivent sont ce que l'en appelle des entêtes (_headers_ en anglais). Ce sont des informations qui viennent compléter la réponse envoyée par le serveur. Dans notre cas :
+
 - `content-length` : la taille de la réponse en octets.
 - `content-type` : le type de contenu renvoyé. Dans notre cas du json (`application/json`). On parle ici de [type MIME (_MIME Types_)](https://fr.wikipedia.org/wiki/Type_de_m%C3%A9dias).
 - `date` : la date et l'heure de la réponse.
@@ -504,14 +539,13 @@ Les 4 lignes qui suivent sont ce que l'en appelle des entêtes (_headers_ en ang
 
 S'en vient ensuite le contenu de la réponse à proprement parler. Dans notre cas une liste (délimitée par `[`et `]`) d'objets json (délimités par `{` et `}`).
 
-
 ## Documentation auto-générée
 
 FastAPI est capable de générer la documentation de votre API automatiquement basé sur un standard nommé [OpenAPI](https://www.openapis.org/). Par défaut il génère une documentation avew [Swagger](https://swagger.io/) à l'URL [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ![Swagger documentation](images/swagger_fastapi_1.png)
 
- et une autre avec [ReDoc](https://redocly.github.io/redoc/) à l'URL [http://localhost:8000/redoc](http://localhost:8000/redoc)
+et une autre avec [ReDoc](https://redocly.github.io/redoc/) à l'URL [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ![ReDoc documentation](images/redoc_fastapi_1.png)
 
@@ -551,6 +585,5 @@ Nous venons de voir comment afficher du contenu HTML, connecter une base de donn
 La prochaine étape va consister à réorganiser notre code pour qu'il puisse grossir un peu plus facilement. En effet, mettre tout notre code dans `main.py` va vite être ingérable. Nous verrons aussi comment mettre en place un début de tests automatisés.
 
 Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part2).
-
 
 Pour la partie 3, c'est par ici : [réorganisation du code, tests automatisés](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-3/).
