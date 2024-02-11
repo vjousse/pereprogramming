@@ -11,7 +11,7 @@ J'ai toujours aimé apprendre par l'exemple et ce guide ne dérogera pas à la r
 
 <!-- more -->
 
-_Mise à jour le 26/01/2024 : Tortoise n'étant pas activement maintenu, j'ai décidé de passer le tutorial de Tortoise ORM à SQL Alchemy_
+_Mise à jour le 11/02/2024 : Tortoise n'étant pas activement maintenu, j'ai décidé de passer le tutorial de Tortoise ORM à SQL Alchemy_
 
 ## Projet : une newsletter à la Substack
 
@@ -209,7 +209,7 @@ Mon choix s'est porté sur [SqlAlchemy](https://www.sqlalchemy.org/) car c'est c
 
 > Pour les besoins de ce guide, nous allons pour l'instant utiliser une base de données simple qui ne nécessite pas d'autres logiciels à installer : [SQLite](https://www.sqlite.org/index.html). Nous verrons plus tard lorsque nous passerons à _Docker_ comment utiliser une base de données bien plus robuste, à savoir [PostgreSQL](https://www.postgresql.org/).
 
-### Installation de Tortoise
+### Installation de SQLAlchemy
 
 Soyez bien certain d'avoir activé votre environnement virtuel :
 
@@ -225,7 +225,7 @@ Puis installez SQLAlchemy.
 
 ### Création du modèle Article
 
-Nous allons ajouter un premier modèle à notre application. Ce modèle va représenter un article dans notre Newsletter. Il aura donc les champs classiques auxquels l'on pourrait s'attendre : titre, contenu, etc.
+Nous allons ajouter un premier modèle à notre application. Ce modèle va représenter un article dans notre Newsletter. Il aura donc les champs classiques auxquels on pourrait s'attendre : titre, contenu, etc.
 
 Mettons à jour notre fichier `main.py` dans ce sens.
 
@@ -264,13 +264,13 @@ class Article(Base):
         return self.title
 
 
-@app.get("/", include_in_schema=False)
+@app.get("/")
 async def root(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
 ```
 
-Tout d'abord, nous importons les classes nécessaires de SQLAlchemy :
+Tout d'abord, nous importons les classes nécessaires à SQLAlchemy :
 
 ```python
 from sqlalchemy import Column, DateTime, Integer, String, create_engine
@@ -320,7 +320,7 @@ Et pour finir, je surcharge la méthode Python par défaut `__str__`.
         return self.title
 ```
 
-Il n'est pas obligatoire de surcharger la fonction `__str__` mais c'est une bonne pratique qui nous permettra de faciliter notre debug plus tard. Quand on demandera à afficher l'objet, cela affichera son titre au lieu d'une représentation incompréhensible interne à Python.
+Il n'est pas obligatoire de surcharger la fonction `__str__` mais c'est une bonne pratique qui nous permettra de faciliter notre debug plus tard. Quand on demandera à afficher l'objet (plus précisément quand on aura besoin de sa représentation en tant que chaîne de caractères), cela affichera son titre au lieu d'une représentation incompréhensible interne à Python.
 
 Il nous reste à déclarer notre base de données SQLAlchemy et à créer notre base de données, voici le code mis à jour pour ce faire :
 
@@ -368,7 +368,7 @@ class Article(Base):
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/", include_in_schema=False)
+@app.get("/")
 async def root(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
@@ -395,12 +395,56 @@ Il va maintenant nous rester à ajouter des méthodes pour créer et afficher no
 
 Créons une méthode qui, à chaque fois que l'on appelle l'url `/articles/create`, va enregistrer un article dans la base de données. Évidemment, ce n'est pas optimal et nous changerons cette méthode un peu plus tard. Nous utiliserons notamment `@app.post` et non pas `@app.get` et nous créerons notre Article à partir d'un formulaire, mais pour un début, ça fera l'affaire.
 
+Tout d'abord, mettez à jour les imports en ajoutant l'import de `Depends` au niveau de FastAPI et ajoutez la fonction `get_db` qui va vous permettre de créer une session d'accès à la base de données.
+
+```python
+# app/main.py
+
+from fastapi import Depends, FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from sqlalchemy import Column, DateTime, Integer, String, create_engine, select
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.sql import func
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+app = FastAPI()
+
+app.mount("/public", StaticFiles(directory="public"), name="public")
+
+templates = Jinja2Templates(directory="app/templates")
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# … reste du fichier
+
+```
+
+Puis ensuite ajoutez ces lignes au dessus de la fonction `root` :
+
 ```python
 # app/main.py
 
 # … début du fichier
 
-@app.get("/articles/create", include_in_schema=False)
+@app.get("/articles/create")
 async def articles_create(request: Request, db: Session = Depends(get_db)):
     article = Article(
         title="Mon titre de test", content="Un peu de contenu<br />avec deux lignes"
@@ -413,13 +457,26 @@ async def articles_create(request: Request, db: Session = Depends(get_db)):
         "articles_create.html", {"request": request, "article": article}
     )
 
+# … reste du fichier
+
 ```
 
-@TODO: plusieurs choses. Expliquer de Depends, inclure le code get_db
+Commençons par nous arrêter à la définition de la fonction.
 
-Nous commençons par créer un objet `Article` puis nous l'ajouIl nous suffit d'appeler la méthode `create` sur notre modèle `Article` et de lui passer les arguments correspondant, ici `title` et `content`.
+```python
+async def articles_create(request: Request, db: Session = Depends(get_db)):
 
-Nous passons ensuite notre objet nouvellement créé à un template nommé `articles_create.html` que vous allez créer dès maintenant dans `app/templates/articles_create.html` avec le contenu suivant :
+```
+
+Ici FastAPI implémente un concept appelé [Injection de dépendances](https://fr.wikipedia.org/wiki/Injection_de_d%C3%A9pendances). L'idée est, via l'utilisation de `Depends`, d'injecter la connexion à la base de données à notre fonction. C'est FastAPI qui va se charger d'instancier cette connexion en faisant appel à la fonction `get_db`. L'injection de dépendances est un concept dont il est difficile de se passer une fois qu'on y a goûté : toutes vos dépendances sont explicites dans la signature de la fonction et en plus, vous n'avez pas à vous soucier de les créer, FastAPI le fait pour vous !
+
+Pour plus d'informations, vous pouvez vour référer à la [documentation de FastAPI sur le sujet (en anglais)](https://fastapi.tiangolo.com/tutorial/dependencies/).
+
+Ensuite nous instancions un objet `Article` puis nous demandons à la base de données de le créer via l'utilisation de la méthode `add`. Il nous faut ensuite appeler `commit` sur notre connexion pour effectivement appliquer les changements à la base de données. Par défaut, les opérations sur la base de données sont réalisées dans ce que l'on appelle des [transactions](https://fr.wikipedia.org/wiki/Transaction_informatique) et ne sont enregistrées dans la base de données qu'à l'appel de la fonction `commit`.
+
+Nous demandons ensuite à la base de données de « rafraîchir » l'objet `article` via l'utilisation de la fonction `refresh`. Cette fontion va, via une requêt `SELECT` à la base de données, rafraîchir les champs de l'objet `article`. Dans notre cas cela va notamment permettre de mettre à jour l'`id` auto attribué par la base de données ainsi que les valeurs des champs `created_at` et `updated_at`.
+
+Pour finir nous passons notre objet nouvellement créé à un template nommé `articles_create.html` que vous allez créer dès maintenant dans `app/templates/articles_create.html` avec le contenu suivant :
 
 ```jinja
 <!DOCTYPE html>
@@ -440,24 +497,29 @@ Nous passons ensuite notre objet nouvellement créé à un template nommé `arti
 
 ### Liste des articles : page HTML
 
-Ajoutons un point d'entrée pour pouvoir afficher la liste de nos articles dans une page HTML.
+Ajoutons un point d'entrée pour pouvoir afficher la liste de nos articles dans une page HTML. Ajoutez le code suivant juste avant la fonction `root` :
 
 ```python
-#
-@app.get("/articles")
-async def articles_list(request: Request):
+# app/main.py
 
-    articles = await Article.all().order_by('created_at')
+# … début du fichier
+
+@app.get("/articles")
+async def articles_list(request: Request, db: Session = Depends(get_db)):
+    articles_statement = select(Article).order_by(Article.created_at)
+    articles = db.scalars(articles_statement).all()
 
     return templates.TemplateResponse(
-        "articles_list.html",
-        {
-            "request": request,
-            "articles": articles
-        })
+        "articles_list.html", {"request": request, "articles": articles}
+    )
+
+# … fin du fichier
 ```
 
-Notez l'utilisation de la function `Article.all()` qui nous permet de récupérer tous les articles. Nous appelons ensuite `.order_by('created_at')` pour trier nos articles par date de création croissante et nous passons notre variable `articles` sous le même nom à notre template `articles_list.html`.
+Dans une première partie, nous préparons notre expression sql (dans la variable `articles_statement`) en faisant un `select` sur la table `Article` et en triant les résultats par ordre croissant de création.
+Ensuite nous exécutons cette expression via l'utilisation de `db.scalars` et récupérons tous les résultats grâce à `all` (nous n'aurions pu récupérer que le premier résultat en utilisant `first` par exemple).
+
+Pour finir nous passons notre variable `articles` sous le même nom à notre template `articles_list.html`.
 
 Il nous reste maintenant à créer le template dans `app/templates/articles_list.html`
 
@@ -479,7 +541,7 @@ Il nous reste maintenant à créer le template dans `app/templates/articles_list
 </html>
 ```
 
-Notez la façon de réaliser des boucles avec le moteur de template Jinja2. Toute commande est commence par un `{%` et finit par un `%}` sur la même ligne. Rien de bien sorcier à part le fait de ne pas oublier de fermer le for avec `{% endfor %}`.
+Notez la façon de réaliser des boucles avec le moteur de template Jinja2. Toute commande commence par un `{%` et finit par un `%}` sur la même ligne. Rien de bien sorcier à part le fait qu'il ne faut pas oublier de fermer le `for` avec `{% endfor %}`.
 
 Ci-dessous le résultat que vous devriez avoir (au nombre d'articles prêt).
 
@@ -487,9 +549,9 @@ Ci-dessous le résultat que vous devriez avoir (au nombre d'articles prêt).
 
 ### Liste des articles : API Json
 
-Afficher du HTML c'est chouette et c'est la base du web. Mais comme je l'ai déjà mentionné en introduction, FastAPI est parfait pour réaliser des **API** (les parties cachées de vos applications mobiles notamment), et on aurait tort de s'en priver. Une Url d'API se comporte comme une URL web classique à la différence prêt qu'elle ne retourne pas de contenu HTML mais juste **des données brutes**.
+Afficher du HTML c'est chouette et c'est la base du web. Mais comme je l'ai déjà mentionné en introduction, FastAPI est parfait pour réaliser des **API** (les parties cachées de vos applications mobiles notamment), et on aurait tort de s'en priver. Une Url d'API se comporte comme une URL web classique à la différence prêt qu'elle ne retourne génarelement pas du contenu HTML mais juste **des données brutes**.
 
-Notre premier _Hello World_ était déjà une URL de _type API_, nous allons faire de même pour créer une API qui retourne la liste de nos articles.
+Notre premier _Hello World_ était déjà une URL de _type API_, nous allons faire de même pour créer une API qui retourne la liste de nos articles. Placez le code suivant juste avant la fonction `root` :
 
 ```python
 # app/main.py
@@ -497,11 +559,12 @@ Notre premier _Hello World_ était déjà une URL de _type API_, nous allons fai
 # … début du contenu du fichier
 
 @app.get("/api/articles")
-async def api_articles_list():
+async def api_articles_list(db: Session = Depends(get_db)):
+    articles_statement = select(Article).order_by(Article.created_at)
 
-    articles = await Article.all().order_by('created_at')
+    return db.scalars(articles_statement).all()
 
-    return articles
+# … fin du fichier
 ```
 
 Et c'est aussi simple que ça. Au lieu de retourner un template comme nous le faisions jusqu'ici, nous retournons juste notre liste d'objets Python. FastAPI se charge de faire le reste.
@@ -528,9 +591,9 @@ Et obtenir un résultat qui se rapproche de la capture d'écran ci-dessous :
 
 ![httpie](images/httpie.png)
 
-La première ligne nous rappelle que nous utilisons le protocole **HTTP** dans sa version **1.1** et que le serveur nous a renvoyé un code de **status 200**. Dans le protocole HTTP, ce code de status 200 signifie que tout c'est bien passé (d'où le **OK** ensuite).
+La première ligne nous rappelle que nous utilisons le protocole **HTTP** dans sa version **1.1** et que le serveur nous a renvoyé un code de **status 200**. Dans le protocole HTTP, ce code de status 200 signifie que tout s'est bien passé (d'où le **OK** ensuite).
 
-Les 4 lignes qui suivent sont ce que l'en appelle des entêtes (_headers_ en anglais). Ce sont des informations qui viennent compléter la réponse envoyée par le serveur. Dans notre cas :
+Les 4 lignes qui suivent sont ce que l'on appelle des entêtes (_headers_ en anglais). Ce sont des informations qui viennent compléter la réponse envoyée par le serveur. Dans notre cas :
 
 - `content-length` : la taille de la réponse en octets.
 - `content-type` : le type de contenu renvoyé. Dans notre cas du json (`application/json`). On parle ici de [type MIME (_MIME Types_)](https://fr.wikipedia.org/wiki/Type_de_m%C3%A9dias).
@@ -584,6 +647,6 @@ Nous venons de voir comment afficher du contenu HTML, connecter une base de donn
 
 La prochaine étape va consister à réorganiser notre code pour qu'il puisse grossir un peu plus facilement. En effet, mettre tout notre code dans `main.py` va vite être ingérable. Nous verrons aussi comment mettre en place un début de tests automatisés.
 
-Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part2).
+Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part2-sqlalchemy).
 
 Pour la partie 3, c'est par ici : [réorganisation du code, tests automatisés](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-3/).
