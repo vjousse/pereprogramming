@@ -7,39 +7,85 @@ author = ["Vincent Jousse"]
 tags = ["python", "framework", "fastapi", "web", "fastapi-tutorial"]
 +++
 
-
 Jusqu'ici nous avons placé tout notre code dans le même fichier `main.py`. Même si nous pourrions continuer comme cela, il est souvent préférable de séparer son code dans des fichiers et des modules différents. Cela va nous aider à nous y retrouver et va encourager le fait de séparer les responsabilités/préoccupations ([Separation of concerns](https://en.wikipedia.org/wiki/Separation_of_concerns) en anglais). Lors de la [partie 2](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-2/) nous avions déjà posé quelques bases en créant des répertoires pour les modèles, les templates, le core, etc. Il est maintenant temps d'aller plus loin et de les utiliser à bon escient.
+
 <!-- more -->
 
+_Mise à jour le 11/02/2024 : Tortoise n'étant pas activement maintenu, j'ai décidé de passer le tutorial de Tortoise ORM à SQL Alchemy_
+
 ## Restructuration du code
+
+### Connexion à la base de données
+
+Créez un fichier `database.py` dans le répertoire précédemment créé à l'emplacement `app/core`. Nous allons y placer la logique de connexion à la base de données. Mettez-y le contenu suivant qui était auparavant dans `app/main.py` et supprimez-le de `app/main.py` :
+
+```python
+# app/core/database.py
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+# DB Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+Il vous faudra ensuite mettre à jour les imports dans `app/main.py` pour importer le nécessaire pour la connexion à la base :
+
+```python
+# app/main.py
+
+from fastapi import Depends, FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.database import Base, engine, get_db
+```
 
 ### Les modèles
 
 Créez un fichier `article.py` dans le répertoire précédemment créé à l'emplacement `app/models`.
 
-Mettez-y le contenu de votre modèle qui se trouvait précédemment dans `main.py`
-
+Mettez-y le contenu de votre modèle qui se trouvait précédemment dans `main.py`.
 
 ```python
 # app/models/article.py
 
-from tortoise import fields
-from tortoise.models import Model
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.sql import func
+
+from app.core.database import Base
 
 
-class Article(Model):
+class Article(Base):
+    __tablename__ = "articles"
 
-    id = fields.IntField(pk=True)
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    content = Column(String)
 
-    title = fields.TextField()
-    content = fields.TextField()
-
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    created_at = Column(String, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __str__(self):
         return self.title
-
 ```
 
 N'oubliez pas de supprimer les lignes correspondantes dans `main.py`. Il nous faut maintenant importer ce nouveau fichier dans `main.py`.
@@ -50,6 +96,107 @@ from app.models.article import Article
 
 L'entête de votre fichier `main.py` devrait ressembler à cela maintenant :
 
+```python
+# app/main.py
+
+from fastapi import Depends, FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.database import Base, engine, get_db
+from app.models.article import Article
+
+# … reste du fichier
+```
+
+Pour être sûr que vous n'avez rien cassé, vous pouvez aller vérifier que [la page listant vos articles](http://localhost:8000/articles) fonctionne toujours correctement.
+
+### Fichier de configuration
+
+Pour préparer la suite, nous allons avoir besoin de séparer la configuration de notre application dans un module à part. Pour ce faire, créez un fichier `config.py` dans le répertoire `app/core` et placez-y la déclaration de notre objet `templates` :
+
+```python
+# app/core/config.py
+
+
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory="app/templates")
+```
+
+Enlevez le code correspondant dans `app/main.py` puis importez `templates` :
+
+```python
+from fastapi import Depends, FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.config import templates
+from app.core.database import Base, engine, get_db
+from app.models.article import Article
+
+# … reste du fichier
+```
+
+### Les vues
+
+Maintenant que nous avons rangé notre modèle à sa place, nous allons faire de même avec les vues, aka les fonctions qui construisent le résultat envoyé au navigateur, que ça soit du HTML ou du JSON.
+
+Pour pouvoir mettre les vues autre part que dans le fichier `main.py`, FastAPI utilise le concept de **routeur**. Ce routeur va faire le lien entre votre app principale FastAPI et des vues placées dans des modules/fichiers Python.
+
+Dans votre répertoire `app/views`, créez un fichier nommé `article.py` qui contiendra vos vues. Placez-y le code suivant :
+
+```python
+# app/views/article.py
+
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.config import templates
+from app.core.database import get_db
+from app.models.article import Article
+
+articles_views = APIRouter()
+
+
+@articles_views.get("/articles/create", include_in_schema=False)
+async def articles_create(request: Request, db: Session = Depends(get_db)):
+    article = Article(
+        title="Mon titre de test", content="Un peu de contenu<br />avec deux lignes"
+    )
+    db.add(article)
+    db.commit()
+    db.refresh(article)
+
+    return templates.TemplateResponse(
+        "articles_create.html", {"request": request, "article": article}
+    )
+
+
+@articles_views.get("/articles", include_in_schema=False)
+async def articles_list(request: Request, db: Session = Depends(get_db)):
+    articles_statement = select(Article).order_by(Article.created_at)
+    articles = db.scalars(articles_statement).all()
+
+    return templates.TemplateResponse(
+        "articles_list.html", {"request": request, "articles": articles}
+    )
+
+
+@articles_views.get("/api/articles")
+async def api_articles_list(db: Session = Depends(get_db)):
+    articles_statement = select(Article).order_by(Article.created_at)
+
+    return db.scalars(articles_statement).all()
+```
+
+Nous avons sélectionné les imports dont nous allions avoir besoin et créons un objet `articles_views` de type [`APIRouter`](https://fastapi.tiangolo.com/reference/apirouter/) qui va nous permettre d'y attacher nos vues. Vous noterez que la seule chose que nous avons changé est le décorateur situé avant chaque fonction. Au lieu d'appeler `app.get` vous appelons maintenant `articles_views.get`.
+
+Nous allons maintenant devoir faire le ménage dans `main.py` et appeler la fonction `app.include_router` pour inclure le routeur que nous venons de déclarer. Voici à quoi devrait ressembler votre fichier `main.py` :
 
 ```python
 # app/main.py
@@ -57,131 +204,47 @@ L'entête de votre fichier `main.py` devrait ressembler à cela maintenant :
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from tortoise.contrib.fastapi import register_tortoise
-from app.models.article import Article
 
-# … reste du fichier
-```
-
-Pour être sûr que vous n'avez rien cassé, vous pouvez aller vérifier que [la page listant vos articles](/articles) fonctionne toujours correctement.
-
-### Les vues
-
-Maintenant que nous avons rangé notre modèle à sa place, nous allons faire de même avec les vues, aka les fonctions qui construisent le résultat envoyé au navigateur, que ça soit du HTML ou du JSON.
-
-Pour pouvoir mettre les vues autre part que dans le fichier `main.py`, FastAPI utilise le concept de __routeur__. Ce routeur va faire le lien entre votre app principale FastAPI et des vues placées dans des modules/fichiers Python.
-
-Dans votre répertoire `app/views`, créez un fichier nommé `article.py` qui contiendra vos vues. Placez-y le code suivant :
-
-```python
-# app/views/article.py
-
-from fastapi import APIRouter
-from fastapi import Request
-from app.models.article import Article
-
-articles_views = APIRouter()
-```
-
-Ici nous préparons les imports dont nous allons avoir besoin et créons un objet `articles_views` de type `APIRouter` qui va nous permettre d'y attacher nos vues. Copiez-collez vos routes du fichier `main.py` vers `app/views/article.py`, ainsi que la déclaration de la variable `templates`. La seule chose que vous devriez avoir à changer est le décorateur situé avant chaque fonction. Au lieu d'appeler `app.get` vous devrez maintenant appeler `articles_views.get`.
-
-Voic le contenu complet du fichier `app/views/article.py` :
-
-```python
-from fastapi import APIRouter
-from fastapi import Request
-from fastapi.templating import Jinja2Templates
-from app.models.article import Article
-
-articles_views = APIRouter()
-
-templates = Jinja2Templates(directory="app/templates")
-
-
-@articles_views.get("/articles/create", include_in_schema=False)
-async def articles_create(request: Request):
-
-    article = await Article.create(
-        title="Mon titre de test",
-        content="Un peu de contenu<br />avec deux lignes"
-    )
-
-    return templates.TemplateResponse(
-        "articles_create.html",
-        {
-            "request": request,
-            "article": article
-        })
-
-
-@articles_views.get("/articles", include_in_schema=False)
-async def articles_list(request: Request):
-
-    articles = await Article.all().order_by('created_at')
-
-    return templates.TemplateResponse(
-        "articles_list.html",
-        {
-            "request": request,
-            "articles": articles
-        })
-
-
-@articles_views.get("/api/articles")
-async def api_articles_list():
-
-    articles = await Article.all().order_by('created_at')
-
-    return articles
-
-
-@articles_views.get("/", include_in_schema=False)
-async def root(request: Request):
-
-    return templates.TemplateResponse(
-        "home.html",
-        {
-            "request": request
-        })
-```
-
-Nous allons maintenant devoir faire le ménage dans `main.py` et appeler la fonction `app.include_router` pour inclure le routeur que nous venons de déclarer. Voici à quoi devrait ressembler votre fichier `main.py` :
-
-```python
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from tortoise.contrib.fastapi import register_tortoise
+from app.core.database import Base, engine
 from app.views.article import articles_views
 
 app = FastAPI()
 
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
-register_tortoise(
-    app,
-    db_url="sqlite://db.sqlite3",
-    modules={"models": ["app.models.article"]},
-    generate_schemas=True,
-    add_exception_handlers=True,
-)
+templates = Jinja2Templates(directory="app/templates")
 
-app.include_router(
-    articles_views,
-    tags=["Articles"])
+
+Base.metadata.create_all(bind=engine)
+
+
+app.include_router(articles_views, tags=["Articles"])
+
+
+@app.get("/", include_in_schema=False)
+async def root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 ```
 
-### Configuration
+### Amélioration de la configuration
 
-Pour finir cette partie sur la restructuration du code, nous allons voir comment __placer toutes nos configurations au même endroit__ pour s'y retrouver plus facilement. Nous allons par exemple y mettre l'url d'accès à la base de données, l'emplacement des templates ou encore la liste de modèles pour `Tortoise`. Même si notre projet n'est pas très complexe pour l'instant, c'est une bonne pratique qui pourra vous faire gagner du temps à l'avenir.
+Pour finir cette partie sur la restructuration du code, nous allons voir comment créer une classe de `Settings` qui va nous permettre de regrouper toutes nos valeurs de configuration au même endroit et nous donner par la suite plus de flexibilité (notamment grâce à l'utilisation de variables d'environnement). Nous allons par exemple y mettre l'url d'accès à la base de données, l'emplacement des templates ou encore celui des fichiers publics. Même si notre projet n'est pas très complexe pour l'instant, c'est une bonne pratique qui pourra vous faire gagner du temps à l'avenir.
 
-Créez un fichier `config.py` dans votre répertoire `app/core/` et mettez-y le contenu qui suit :
+Commencez par installer le package requis :
+
+```shell
+pip install pydantic-settings
+```
+
+Puis modifiez le contenu du fichier `config.py` dans votre répertoire `app/core/` et mettez-y le contenu qui suit :
 
 ```python
 # app/core/config.py
 
-from pydantic import BaseSettings
 import os
+
 from fastapi.templating import Jinja2Templates
+from pydantic_settings import BaseSettings
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -189,14 +252,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 class Settings(BaseSettings):
     APP_NAME: str = "fastapi-tutorial"
     APP_VERSION: str = "0.0.1"
-    SQLITE_URL: str = "sqlite://db.sqlite3"
+    SQLITE_URL: str = "sqlite:///./sql_app.db"
 
-    TORTOISE_MODELS = [
-        "app.models.article"
-    ]
-
-    TEMPLATES_DIR = os.path.join(dir_path, "..", "templates")
-    STATIC_FILES_DIR = os.path.join(dir_path, "..", "..", "public")
+    TEMPLATES_DIR: str = os.path.join(dir_path, "..", "templates")
+    STATIC_FILES_DIR: str = os.path.join(dir_path, "..", "..", "public")
 
 
 settings = Settings()
@@ -204,71 +263,58 @@ settings = Settings()
 templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
 ```
 
-Il vous faut maintenant modifier votre fichier `main.py` pour utiliser les valeurs de votre configuration plutôt que celles qui étaient codées en dur :
+Il vous faut maintenant modifier vos fichiers `main.py` et `database.py` pour utiliser les valeurs de votre configuration plutôt que celles qui étaient codées en dur.
+
+Pour `main.py` is s'agit de modifier le paramètre `directory` de `StaticFiles` en important `settings` et en utilisant la valeur `STATIC_FILES_DIR` :
 
 ```python
 # app/main.py
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from tortoise.contrib.fastapi import register_tortoise
-from app.views.article import articles_views
+from fastapi.templating import Jinja2Templates
+
 from app.core.config import settings
+from app.core.database import Base, engine
+from app.views.article import articles_views
 
 app = FastAPI()
 
-app.mount("/public",
-          StaticFiles(directory=settings.STATIC_FILES_DIR),
-          name="public")
+app.mount("/public", StaticFiles(directory=settings.STATIC_FILES_DIR), name="public")
 
-register_tortoise(
-    app,
-    db_url=settings.SQLITE_URL,
-    modules={"models": settings.TORTOISE_MODELS},
-    generate_schemas=True,
-    add_exception_handlers=True,
-)
-
-app.include_router(
-    articles_views,
-    tags=["Articles"])
-```
-
-Il ne vous reste plus qu'à utiliser l'objet `templates` que nous avons créé dans notre configuration au sein de vos vues plutôt que de le recréer à chaque fois (ce que nous aurions du faire si nous avions eu plusieurs fichiers de vues) :
-
-```python
-# app/views/article.py
-
-from fastapi import APIRouter
-from fastapi import Request
-from app.models.article import Article
-from app.core.config import templates
-
-articles_views = APIRouter()
-
-
-@articles_views.get("/articles/create", include_in_schema=False)
-async def articles_create(request: Request):
 # … reste du fichier
 
 ```
 
-Vous noterez que nous avons enlevé la création de l'objet `templates` et avons importé celui déjà créé dans notre fichier `config.py`. N'oubliez pas d'enlever l'import de `Jinja2Templates` qui ne sert plus à rien.
+Pour `database.py` c'est l'emplacement de la base de données qui doit être changé en utilisant `SQLITE_URL` :
+
+```python
+# app/core/database.py
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from app.core.config import settings
+
+engine = create_engine(settings.SQLITE_URL, connect_args={"check_same_thread": False})
+```
 
 ## Tests
 
-L'écriture de tests est un sujet qui reviendra souvent dans le code que nous allons effectuer et pour cause : si vous voulez garantir la __qualité de votre code__, vous devez écrire des __tests automatisés__ pour s'assurer qu'il fonctionne correctement.
+@TODO: rewrite for SQLAlchemy
 
-Si vous ne savez pas ce que c'est, ce n'est rien de plus qu'un petit __robot__/__bout de code__ qui va se charger d'appeler différentes partie de votre code et va s'assurer qu'il se comporte bien comme il devrait.
+L'écriture de tests est un sujet qui reviendra souvent dans le code que nous allons effectuer et pour cause : si vous voulez garantir la **qualité de votre code**, vous devez écrire des **tests automatisés** pour s'assurer qu'il fonctionne correctement.
+
+Si vous ne savez pas ce que c'est, ce n'est rien de plus qu'un petit **robot**/**bout de code** qui va se charger d'appeler différentes partie de votre code et va s'assurer qu'il se comporte bien comme il devrait.
 
 Si vous pensez que « c'est bon je peux tester tout seul à la main » ou encore que « mon code n'est pas si compliqué que ça, pas besoin de s'embêter » vous êtes soit très débutant et il serait bien de me croire sur parole, ou soit très expérimenté et là je ne peux plus rien pour vous :wink:
 
 Quoiqu'il en soit, lorsque que l'on utilise un langage comme Python où les erreurs sont détectées au _runtime_, c'est à dire lorsque l'application est lancée et utilisée, c'est une bonne idée de mettre toutes les chances de son côté pour détecter les bugs avant que l'application soit utilisée. Sinon, évidemment, vous laisserez le soin à vos utilisateurs de découvrir vos bugs.
 
-> __Bon à savoir__ : il existe d'autres langages de programmation que l'on appelle _statiquement typés_ et qui disposent d'un compilateur qui vérifira une partie des erreurs avant même que vous puissiez lancer l'application (_Rust_, _Java_,…). Mais comme ce n'est pas le cas de Python, écrire des tests est primordial. À noter que même si ces langages disposent d'un compilateur, il ne dispense pas d'écire tous les tests mais seulement quelques tests basiques.
+> **Bon à savoir** : il existe d'autres langages de programmation que l'on appelle _statiquement typés_ et qui disposent d'un compilateur qui vérifira une partie des erreurs avant même que vous puissiez lancer l'application (_Rust_, _Java_,…). Mais comme ce n'est pas le cas de Python, écrire des tests est primordial. À noter que même si ces langages disposent d'un compilateur, il ne dispense pas d'écire tous les tests mais seulement quelques tests basiques.
 
-
-Le logiciel qui va nous permettre de tester notre programme est appelé __`pytest`__. Commençons pas l'installer dans notre `virtualenv` ainsi qu'une librairie utile à `Tortoise` :
+Le logiciel qui va nous permettre de tester notre programme est appelé **`pytest`**. Commençons pas l'installer dans notre `virtualenv` ainsi qu'une librairie utile à `Tortoise` :
 
 ```
 (venv) $ pip install pytest asynctest
@@ -300,20 +346,20 @@ def test_home(client: TestClient) -> None:
 
 Ici, nous utilisons un "faux navigateur/client web" nommé `TestClient` qui va nous permettre d'aller charger des pages comme nous le ferions avec Chrome ou Firefox de manière presque classique (avec l'exécution du Javascript en moins, entre autres).
 
-Nous demandons à notre client d'aller charger la page à l'adresse `/`. Nous utilisons ensuite un mot clé dédié aux tests : __`assert`__. Ce mot clé nous permet de nous assurer que la condition qui suit est vraie. Dans notre cas, nous commençons par vérifier que le _status code_ HTTP renvoyé par FastAPI est bien 200.
+Nous demandons à notre client d'aller charger la page à l'adresse `/`. Nous utilisons ensuite un mot clé dédié aux tests : **`assert`**. Ce mot clé nous permet de nous assurer que la condition qui suit est vraie. Dans notre cas, nous commençons par vérifier que le _status code_ HTTP renvoyé par FastAPI est bien 200.
 
-Lors d'une requête HTTP sur le web, le serveur renvoie __toujours__ un code de statut pour nous informer du déroulement de la requête. Le code 200 nous indique que tout s'est déroulé sans erreur.
+Lors d'une requête HTTP sur le web, le serveur renvoie **toujours** un code de statut pour nous informer du déroulement de la requête. Le code 200 nous indique que tout s'est déroulé sans erreur.
 
-> __Bon à savoir__ : 
-> Si le code de statut commence par __5__, c'est une erreur du côté du serveur, donc vous ne pouvez a priori rien y faire (500 par exemple)
-> 
-> Si le code de statut commence par __4__, c'est une erreur du côté du client HTTP (donc vous) : 404 page non trouvée (mauvaise adresse), 403 accès refusé (besoin de se connecter), …
+> **Bon à savoir** :
+> Si le code de statut commence par **5**, c'est une erreur du côté du serveur, donc vous ne pouvez a priori rien y faire (500 par exemple)
 >
-> Si le code de statut commence par __3__, le serveur indique une redirection (changement d'adresse)
+> Si le code de statut commence par **4**, c'est une erreur du côté du client HTTP (donc vous) : 404 page non trouvée (mauvaise adresse), 403 accès refusé (besoin de se connecter), …
 >
-> Si le code de statut commence par __2__, c'est que tout va bien
+> Si le code de statut commence par **3**, le serveur indique une redirection (changement d'adresse)
 >
-> Si le code de statut commence par __1__, cela indique juste la réception d'une information
+> Si le code de statut commence par **2**, c'est que tout va bien
+>
+> Si le code de statut commence par **1**, cela indique juste la réception d'une information
 >
 > Vous trouverez plus de détail sur la [page wikipedia dédiée](https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP)
 
@@ -354,11 +400,10 @@ Vous devriez maintenant être capable de lancer votre test avec la ligne de comm
 (venv) $  pytest --disable-warnings app/tests/views/test_home.py
 ```
 
-> __Warnings__ : 
+> **Warnings** :
 > La version actuelle de _Tortoise ORM_ affiche des warnings de ce style `DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead` à cause de l'utilisation d'une ancienne librairie nommée `asynctest`.
 >
 > Avec un peu de chance, le problème sera bientôt réglé, mais pour l'instant il est nécessaire d'utiliser l'option `--disable-warnings` de pytest pour ne pas les afficher
-> 
 
 Vous devriez voir un résultat de ce genre s'afficher :
 
@@ -379,7 +424,6 @@ Alors certes nous n'avons pour l'instant qu'une vue à tester mais, croyez-moi, 
 ### Test des articles
 
 Créez un fichier nommé `test_articles.py` dans le répertoire `app/tests/views/` et placez-y le contenu suivant :
-
 
 ```python
 # app/tests/views/test_articles.py
@@ -461,7 +505,6 @@ Ensuite, lancez votre test comme précédemment :
 
 Vous devriez obtenir quelque chose de ce style :
 
-
 ```
 ====================================== test session starts =======================================
 platform linux -- Python 3.9.6, pytest-6.2.4, py-1.10.0, pluggy-0.13.1
@@ -494,7 +537,7 @@ app/tests/views/test_home.py .                                                  
 
 ```
 
-> __Juste au cas où__ : 
+> **Juste au cas où** :
 > Si des fois vous obtenez une erreur de ce style en lançant les tests : `got Future <Future pending> attached to a different loop` assurez-vous de ne pas avoir `pytest-asyncio` d'installé. Si c'est le cas, c'est surement lui qui pose souci. Assurez vous de le désinstaller auparavant :
 >
 > `pip uninstall pytest-asyncio`
@@ -504,6 +547,5 @@ app/tests/views/test_home.py .                                                  
 Nous venons d'achever une étape qui peut paraître fastidieuse mais qui est haut combien importante : le refactoring et le test de notre code. Cette étape nous permet maintenant de partir sur des bases propres et solides pour ajouter des fonctionnalités à notre application.
 
 Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part3).
-
 
 Pour la partie 4, c'est par ici : [création, récupération et suppression des articles](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-4/).
