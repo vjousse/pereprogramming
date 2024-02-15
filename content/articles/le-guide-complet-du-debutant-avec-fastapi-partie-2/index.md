@@ -115,7 +115,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request, "home.html")
 ```
 
 Décortiquons ce que nous venons de faire.
@@ -137,14 +137,12 @@ Nous créons un objet (`templates`) qui va nous permettre de créer de l'HTML av
 ```python
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request, "home.html")
 ```
 
 Nous avons ensuite modifié notre méthode `root` pour qu'elle récupère l'objet `request`. Cet objet est fourni par FastAPI (plus précisement par [starlette](https://www.starlette.io), Framework sur lequel FastAPI est basé) et permet d'obtenir des informations sur la requête : l'URL d'origine, les cookies, les headers, etc. La documentation complète est disponible ici : [https://www.starlette.io/requests/](https://www.starlette.io/requests/). Nous y reviendrons.
 
 Au lieu de retourner un simple dictionnaire Python comme précédemment, notre méthode renvoie maintenant un objet `TemplateResponse`. C'est un objet qui va être en charge de créer du HTML à partir d'un template, `home.html` dans notre cas. Il ira chercher ce template dans le répertoire que nous avons spécifié plus haut avec `directory="app/templates"`.
-
-Notez le dictionnaire Python passé deuxième paramètre, `{"request": request}`. Ce dictionnaire va nous permettre de passer des données de notre vue à notre template. Dans ce cas précis, nous passons la requête en paramètre. La clé du dictionnaire `"request"` est le nom que nous voulons donner à notre valeur dans le template et la valeur du dictionnaire `request` est la valeur que nous souhaitons passer au template sous ce nom.
 
 Il nous faut ensuite créer le contenu du template dans `app/templates/home.html`. Copiez-collez le code suivant :
 
@@ -176,7 +174,7 @@ L'autre ligne intéressante est celle-ci :
 <p>Current url: <strong>{{ request.url }}</strong></p>
 ```
 
-Ici nous nous servons de l'objet `request` de starlette que nous avions passé à notre template (`templates.TemplateResponse("home.html", {"request": request})`) pour afficher l'url courante.
+Ici nous nous servons de l'objet `request` de starlette que nous avions passé à notre template (`templates.TemplateResponse(request, "home.html")`) pour afficher l'url courante.
 
 Il nous reste à créer le fichier `styles.css` dans le répertoire `public/` et d'y mettre le contenu suivant par exemple :
 
@@ -236,8 +234,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Column, DateTime, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
 
@@ -266,7 +263,7 @@ class Article(Base):
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request, "home.html")
 
 ```
 
@@ -274,8 +271,7 @@ Tout d'abord, nous importons les classes nécessaires à SQLAlchemy :
 
 ```python
 from sqlalchemy import Column, DateTime, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
 ```
 
@@ -331,8 +327,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Column, DateTime, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
 app = FastAPI()
@@ -370,7 +365,7 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request, "home.html")
 
 
 ```
@@ -404,8 +399,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Column, DateTime, Integer, String, create_engine, select
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
@@ -454,7 +448,7 @@ async def articles_create(request: Request, db: Session = Depends(get_db)):
     db.refresh(article)
 
     return templates.TemplateResponse(
-        "articles_create.html", {"request": request, "article": article}
+        request, "articles_create.html", {"article": article}
     )
 
 # … reste du fichier
@@ -476,7 +470,9 @@ Ensuite nous instancions un objet `Article` puis nous demandons à la base de do
 
 Nous demandons ensuite à la base de données de « rafraîchir » l'objet `article` via l'utilisation de la fonction `refresh`. Cette fontion va, via une requêt `SELECT` à la base de données, rafraîchir les champs de l'objet `article`. Dans notre cas cela va notamment permettre de mettre à jour l'`id` auto attribué par la base de données ainsi que les valeurs des champs `created_at` et `updated_at`.
 
-Pour finir nous passons notre objet nouvellement créé à un template nommé `articles_create.html` que vous allez créer dès maintenant dans `app/templates/articles_create.html` avec le contenu suivant :
+Pour finir nous passons notre objet nouvellement créé à un template nommé `articles_create.html`. Notez le dictionnaire Python passé en troisième paramètre, `{"article": article}`. Ce dictionnaire va nous permettre de passer des données de notre vue à notre template. Dans ce cas précis, nous passons l'objet créé en paramètre. La clé du dictionnaire `"article"` est le nom que nous voulons donner à notre valeur dans le template et la valeur du dictionnaire `request` est la valeur que nous souhaitons passer au template sous ce nom.
+
+Il vous reste à créer le template à l'emplacement `app/templates/articles_create.html` avec le contenu suivant :
 
 ```jinja
 <!DOCTYPE html>
@@ -510,7 +506,7 @@ async def articles_list(request: Request, db: Session = Depends(get_db)):
     articles = db.scalars(articles_statement).all()
 
     return templates.TemplateResponse(
-        "articles_list.html", {"request": request, "articles": articles}
+        request, "articles_list.html", {"articles": articles}
     )
 
 # … fin du fichier
