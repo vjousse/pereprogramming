@@ -571,8 +571,6 @@ app/tests/views/test_articles.py .                                              
 app/tests/views/test_home.py .                                                                     [100%]
 
 =========================================== 2 passed in 0.16s ============================================
-➜
-
 ```
 
 ## Conclusion
