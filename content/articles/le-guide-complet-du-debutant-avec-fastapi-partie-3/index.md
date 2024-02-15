@@ -23,8 +23,7 @@ Créez un fichier `database.py` dans le répertoire précédemment créé à l'e
 # app/core/database.py
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
@@ -233,7 +232,7 @@ Pour finir cette partie sur la restructuration du code, nous allons voir comment
 Commencez par installer le package requis :
 
 ```shell
-pip install pydantic-settings
+(venv) $ pip install pydantic-settings
 ```
 
 Puis modifiez le contenu du fichier `config.py` dans votre répertoire `app/core/` et mettez-y le contenu qui suit :
@@ -302,22 +301,20 @@ engine = create_engine(settings.SQLITE_URL, connect_args={"check_same_thread": F
 
 ## Tests
 
-@TODO: rewrite for SQLAlchemy
-
 L'écriture de tests est un sujet qui reviendra souvent dans le code que nous allons effectuer et pour cause : si vous voulez garantir la **qualité de votre code**, vous devez écrire des **tests automatisés** pour s'assurer qu'il fonctionne correctement.
 
 Si vous ne savez pas ce que c'est, ce n'est rien de plus qu'un petit **robot**/**bout de code** qui va se charger d'appeler différentes partie de votre code et va s'assurer qu'il se comporte bien comme il devrait.
 
-Si vous pensez que « c'est bon je peux tester tout seul à la main » ou encore que « mon code n'est pas si compliqué que ça, pas besoin de s'embêter » vous êtes soit très débutant et il serait bien de me croire sur parole, ou soit très expérimenté et là je ne peux plus rien pour vous :wink:
+Si vous pensez que « c'est bon je peux tester tout seul à la main » ou encore que « mon code n'est pas si compliqué que ça, pas besoin de s'embêter » vous êtes soit très débutant et il serait bien de me croire sur parole, ou soit très expérimenté et là je ne peux plus rien pour vous 😉
 
-Quoiqu'il en soit, lorsque que l'on utilise un langage comme Python où les erreurs sont détectées au _runtime_, c'est à dire lorsque l'application est lancée et utilisée, c'est une bonne idée de mettre toutes les chances de son côté pour détecter les bugs avant que l'application soit utilisée. Sinon, évidemment, vous laisserez le soin à vos utilisateurs de découvrir vos bugs.
+Quoiqu'il en soit, lorsque que l'on utilise un langage comme Python où les erreurs sont détectées au _runtime_, c'est à dire lorsque l'application est lancée et utilisée, c'est une bonne idée de mettre toutes les chances de son côté pour détecter les bugs avant que l'application ne soit utilisée. Sinon, évidemment, vous laisserez le soin à vos utilisateurs de découvrir vos bugs.
 
-> **Bon à savoir** : il existe d'autres langages de programmation que l'on appelle _statiquement typés_ et qui disposent d'un compilateur qui vérifira une partie des erreurs avant même que vous puissiez lancer l'application (_Rust_, _Java_,…). Mais comme ce n'est pas le cas de Python, écrire des tests est primordial. À noter que même si ces langages disposent d'un compilateur, il ne dispense pas d'écire tous les tests mais seulement quelques tests basiques.
+> **Bon à savoir** : il existe d'autres langages de programmation que l'on appelle _statiquement typés_ et qui disposent d'un compilateur qui vérifira une partie des erreurs avant même que vous puissiez lancer l'application (_Rust_, _Java_,…). Mais comme ce n'est pas le cas de Python, écrire des tests est encore plus important. À noter que même si ces langages disposent d'un compilateur, il ne dispense pas d'écire des tests mais va nous en économiser quelques uns.
 
-Le logiciel qui va nous permettre de tester notre programme est appelé **`pytest`**. Commençons pas l'installer dans notre `virtualenv` ainsi qu'une librairie utile à `Tortoise` :
+Le logiciel qui va nous permettre de tester notre programme est appelé **`pytest`**. Commençons pas l'installer dans notre `virtualenv` :
 
 ```
-(venv) $ pip install pytest asynctest
+(venv) $ pip install pytest
 ```
 
 Nous allons commencer par effectuer un test tout simple : s'assurer que notre page d'accueil `/` se charge sans erreur.
@@ -367,55 +364,61 @@ Vous noterez que l'on teste aussi le contenu de la page HTML en s'assurant que l
 
 Pour pouvoir lancer ce test, il va nous manquer un fichier qui nous permet de configurer `pytest` et notamment qui va nous permettre de créer les objets qui sont nécessaires à l'exécution des tests.
 
-Créez un fichier nommé `conftest.py` dans `app/test/conftest.py` et placez-y le contenu suivant :
+Créez un fichier nommé `conftest.py` dans `app/tests/` et placez-y le contenu suivant :
 
 ```python
 # app/tests/conftest.py
-
-import os
-from typing import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
-from tortoise.contrib.test import finalizer, initializer
 
-from app.core.config import settings
-from app.main import app
+from ..main import app
 
-# Test client
-@pytest.fixture(scope="module")
-def client() -> Iterator[TestClient]:
-    db_url = os.environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
-    initializer(settings.TORTOISE_MODELS, db_url=db_url, app_label="models")
-    with TestClient(app) as test_client:
-        yield test_client
-    finalizer()
+
+# Test client fixture
+@pytest.fixture()
+def client() -> TestClient:
+    return TestClient(app)
 ```
 
-Je ne vais pas rentrer dans les détails de la tambouille interne de `pytest`, de `FastAPI` et de `tortoise` pour vous expliquer le code ci-dessus, mais croyez-moi sur parole, il fonctionne :wink:
+Nous écrivons ici une fonction `client` qui retourne un client HTTP initialisé avec notre application FastAPI. C'est ce client qui va nous permettre de faire des appels à nos vues et d'en récupérer le contenu des réponses.
+
+Vous pouvez noter l'utilisation du décorateur python
+
+```python
+@pytest.fixture()
+```
+
+Le fait d'entourer notre fonction par ce décorateur va nous permettre d'obtenir le résultat de la fonction `client()` directement dans notre fonction de test `test_home`.
+
+```python
+# app/tests/views/test_home.py
+
+# … début du fichier
+
+def test_home(client: TestClient) -> None:
+
+```
+
+En effet, dans notre fichier de test, le seul fait d'ajouter un paramètre nommé `client` à notre fonction va suffire à pytest pour aller chercher, dans le fichier `conftest.py` une fonction décorée avec `@pytest.fixture()` correspondant au même nom. Ici, puisque nous déclarons un paramètre nommé `client`, pytest va aller automatiquement chercher une fonction nommée `client()` dans le fichier conftest.
 
 Vous devriez maintenant être capable de lancer votre test avec la ligne de commande suivante à la racine du projet :
 
 ```
-(venv) $  pytest --disable-warnings app/tests/views/test_home.py
+(venv) $  pytest app/tests/views/test_home.py
 ```
 
-> **Warnings** :
-> La version actuelle de _Tortoise ORM_ affiche des warnings de ce style `DeprecationWarning: "@coroutine" decorator is deprecated since Python 3.8, use "async def" instead` à cause de l'utilisation d'une ancienne librairie nommée `asynctest`.
->
-> Avec un peu de chance, le problème sera bientôt réglé, mais pour l'instant il est nécessaire d'utiliser l'option `--disable-warnings` de pytest pour ne pas les afficher
-
-Vous devriez voir un résultat de ce genre s'afficher :
+Et vous devriez voir un résultat de ce genre s'afficher :
 
 ```
-====================================== test session starts =======================================
-platform linux -- Python 3.9.6, pytest-6.2.4, py-1.10.0, pluggy-0.13.1
+========================================== test session starts ===========================================
+platform linux -- Python 3.11.5, pytest-8.0.0, pluggy-1.4.0
 rootdir: /home/vjousse/usr/src/python/fastapi-beginners-guide
+plugins: anyio-4.2.0
 collected 1 item
 
-app/tests/views/test_home.py .                                                             [100%]
+app/tests/views/test_home.py .                                                                     [100%]
 
-================================= 1 passed, 18 warnings in 0.03s =================================
+=========================================== 1 passed in 0.02s ============================================
 
 ```
 
@@ -429,123 +432,153 @@ Créez un fichier nommé `test_articles.py` dans le répertoire `app/tests/views
 # app/tests/views/test_articles.py
 
 from fastapi.testclient import TestClient
-import asyncio
 
 from app.models.article import Article
+from app.tests.conftest import TestingSessionLocal
 
 
-async def create_article():
-    article = await Article.create(
-        title="Mon titre de test",
-        content="Un peu de contenu<br />avec deux lignes"
+def test_create_article(client: TestClient, session: TestingSessionLocal) -> None:
+    article = Article(
+        title="Mon titre de test", content="Un peu de contenu<br />avec deux lignes"
     )
 
-    return article
-
-
-def test_create_article(client: TestClient,
-                        event_loop: asyncio.AbstractEventLoop) -> None:
-
-    article = event_loop.run_until_complete(create_article())
+    session.add(article)
+    session.commit()
 
     response = client.get("api/articles")
     assert response.status_code == 200
     content = response.json()
+    assert len(content) == 1
     first_article = content[0]
     assert first_article["title"] == article.title
     assert first_article["content"] == article.content
-
 ```
 
-Dans ce test nous créons un article dans la base de données et nous vérifions ensuite qu'il est bien affiché dans le json de la page `api/articles`. Rien de bien sorcier ici, si ce ne sont les références à l'`event_loop`.
-
-Pour essayer de rester simple : `FastAPI` et `Tortoise ORM` tournent dans un environnement asynchrone mais pas `pytest`. C'est pourquoi, à chaque fois que nous voudrons utiliser des accès à la base de données (asynchrones) nous devrons le faire en utilisant explicitement la machinerie asynchrone de FastAPI en passant par l'event loop et la méthode `event_loop.run_until_complete`.
-
-Pour que ce code fonctionne, vous devrez modifier le fichier `app/tests/conftest.py` pour y ajouter la méthode `event_loop` comme ci-dessous :
+Dans ce test nous créons un article dans la base de données et nous vérifions ensuite qu'il est bien affiché dans le json de la page `api/articles`. Rien de bien sorcier ici, si ce n'est la variable `session` passée en paramètre, variable qui nous donne accès à la base de donnée. Si vous avez bien suivi ce que je vous ai dit plus haut, cette variable doit venir d'une `fixture` configurée dans `conftest.py`. Mettez à jour votre fichier `app/tests/conftest.py` de la manière suivante :
 
 ```python
 # app/tests/conftest.py
 
-import asyncio
-import os
 from typing import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from tortoise.contrib.test import finalizer, initializer
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.core.config import settings
-from app.main import app
+from ..core.database import Base, get_db
+from ..main import app
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app_test.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(scope="module")
-def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+@pytest.fixture()
+def session() -> Iterator[TestingSessionLocal]:
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    db = TestingSessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 # Test client
-@pytest.fixture(scope="module")
-def client(event_loop: asyncio.BaseEventLoop) -> Iterator[TestClient]:
-    db_url = os.environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
-    initializer(
-        settings.TORTOISE_MODELS, db_url=db_url, app_label="models", loop=event_loop
-    )
-    with TestClient(app) as test_client:
-        yield test_client
-    finalizer()
+@pytest.fixture()
+def client(session: TestingSessionLocal) -> Iterator[TestClient]:
+    # Dependency override
+
+    def override_get_db():
+        try:
+            yield session
+        finally:
+            session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield TestClient(app)
 ```
+
+On voit que l'on a rajouté une `fixture` nommée `session` qui prend en charge la création de la base de données avec les paramètres définis plus haut. Une partie de ce code devrait vous être familier : il est quasiment identique au code utilisé dans notre appli FastAPI précédemment.
+
+Notez aussi que nous avons mis à jour la fixture `client`. Cette fixture prend maintenant un paramètre, `session`, qui est en fait la fixture que nous venons de créer (c'est Pytest qui s'autodébrouille pour la créer et l'injecter comme paramètre à notre fonction). Cela va nous permettre d'avoir accès à la base de données dans le code de `client`. FastAPI dispose d'une méthode `dependency_overrides` qui va nous permettre de surcharger une dépendance. Rappelez-vous, dans les vues de nos articles, nous avions une ligne comme celle-ci :
+
+```python
+# app/views/article.py
+
+# … début du fichier
+async def articles_create(request: Request, db: Session = Depends(get_db)):
+
+# … suite du fichier
+```
+
+Celle ligne nous informe que la fonction prend en paramètre une dépendance, `db` qui doit être récupérée en appelant la fonction `get_db`.
+
+Dans notre fixture `client`, la ligne :
+
+```python
+    app.dependency_overrides[get_db] = override_get_db
+```
+
+vient signifier à FastAPI qu'il doit remplacer la fonction `get_db` dans toutes les dépendances par la fonction `override_get_db`. Cette dernière renvoyant la base de données de test, cela va avoir pour effet de faire tourner notre application FastAPI sur la base de données de test, au lieu de la base de données par défaut.
 
 Ensuite, lancez votre test comme précédemment :
 
 ```
-(venv) $  pytest --disable-warnings app/tests/views/test_articles.py
+(venv) $  pytest app/tests/views/test_articles.py
 ```
 
 Vous devriez obtenir quelque chose de ce style :
 
 ```
-====================================== test session starts =======================================
-platform linux -- Python 3.9.6, pytest-6.2.4, py-1.10.0, pluggy-0.13.1
+========================================== test session starts ===========================================
+platform linux -- Python 3.11.5, pytest-8.0.0, pluggy-1.4.0
 rootdir: /home/vjousse/usr/src/python/fastapi-beginners-guide
+plugins: anyio-4.2.0
 collected 1 item
 
-app/tests/views/test_articles.py .                                                         [100%]
+app/tests/views/test_articles.py .                                                                 [100%]
 
-================================= 1 passed, 18 warnings in 0.03s =================================
+=========================================== 1 passed in 0.09s ============================================
 ```
 
 Vous pouvez lancer tous vos tests en même temps en ne spécifiant que le répertoire des tests à pytest :
 
 ```
-(venv) $  pytest --disable-warnings app/tests/
+(venv) $  pytest app/tests/
 ```
 
 Vos deux fichiers de tests sont alors mentionnés dans le rapport :
 
 ```
-====================================== test session starts =======================================
-platform linux -- Python 3.9.6, pytest-6.2.4, py-1.10.0, pluggy-0.13.1
+========================================== test session starts ===========================================
+platform linux -- Python 3.11.5, pytest-8.0.0, pluggy-1.4.0
 rootdir: /home/vjousse/usr/src/python/fastapi-beginners-guide
+plugins: anyio-4.2.0
 collected 2 items
 
-app/tests/views/test_articles.py .                                                         [ 50%]
-app/tests/views/test_home.py .                                                             [100%]
+app/tests/views/test_articles.py .                                                                 [ 50%]
+app/tests/views/test_home.py .                                                                     [100%]
 
-================================= 2 passed, 18 warnings in 0.05s =================================
+=========================================== 2 passed in 0.16s ============================================
+➜
 
 ```
 
-> **Juste au cas où** :
-> Si des fois vous obtenez une erreur de ce style en lançant les tests : `got Future <Future pending> attached to a different loop` assurez-vous de ne pas avoir `pytest-asyncio` d'installé. Si c'est le cas, c'est surement lui qui pose souci. Assurez vous de le désinstaller auparavant :
->
-> `pip uninstall pytest-asyncio`
-
 ## Conclusion
 
-Nous venons d'achever une étape qui peut paraître fastidieuse mais qui est haut combien importante : le refactoring et le test de notre code. Cette étape nous permet maintenant de partir sur des bases propres et solides pour ajouter des fonctionnalités à notre application.
+Nous venons d'achever une étape qui peut paraître fastidieuse mais qui est haut combien importante : le refactoring et le test de notre code. Cette étape nous permet maintenant de partir sur des bases propres et solides pour ajouter des fonctionnalités à notre application.
 
-Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part3).
+Comme d'habitude, le code pour cette partie est [accessible directement sur Github](https://github.com/vjousse/fastapi-beginners-guide/tree/part3-sqlalchemy).
 
 Pour la partie 4, c'est par ici : [création, récupération et suppression des articles](/articles/le-guide-complet-du-debutant-avec-fastapi-partie-4/).
