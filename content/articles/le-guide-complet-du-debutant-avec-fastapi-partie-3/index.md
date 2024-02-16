@@ -264,7 +264,7 @@ templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
 
 Il vous faut maintenant modifier vos fichiers `main.py` et `database.py` pour utiliser les valeurs de votre configuration plutôt que celles qui étaient codées en dur.
 
-Pour `main.py` is s'agit de modifier le paramètre `directory` de `StaticFiles` en important `settings` et en utilisant la valeur `STATIC_FILES_DIR` :
+Pour `main.py` il s'agit de modifier le paramètre `directory` de `StaticFiles` en important `settings` et en utilisant la valeur `STATIC_FILES_DIR` :
 
 ```python
 # app/main.py
