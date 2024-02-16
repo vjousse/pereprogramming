@@ -2,44 +2,59 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="/css/pico.min.css">
-    <link rel="stylesheet" href="/css/custom.css">
+    <link rel="stylesheet" href="/css/pico.min.css" />
+    <link rel="stylesheet" href="/css/custom.css" />
 
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="@pereprogramming">
-    <meta name="twitter:creator" content="@pereprogramming">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@pereprogramming" />
+    <meta name="twitter:creator" content="@pereprogramming" />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="{{config.base_url | safe}}/{{current_path | safe}}" />
+    <meta
+      property="og:url"
+      content="{{config.base_url | safe}}/{{current_path | safe}}"
+    />
     <meta property="og:site_name" content="Pere Programming" />
-    <meta property="og:image" content="{{config.base_url | safe}}/logo.png">
+    <meta property="og:image" content="{{config.base_url | safe}}/logo.png" />
     {% block meta_content %}
     <title>Pere Programming</title>
-    <meta name="twitter:title" content="Pere Programming">
+    <meta name="twitter:title" content="Pere Programming" />
     <meta property="og:title" content="Pere Programming" />
     {% endblock meta_content %}
 
-    <script async defer data-domain="pereprogramming.com" src="https://s.pereprogramming.com/js/pl.js"></script>
+    <link href="https://mamot.fr/@vjousse" rel="me" />
+
+    <script
+      async
+      defer
+      data-domain="pereprogramming.com"
+      src="https://s.pereprogramming.com/js/pl.js"
+    ></script>
   </head>
 
   <body>
     <nav>
       <ul>
-        <li><a class="contrast" href="/">
-          <div class="logo">
-            <span class="logo__mark">&gt;</span>
-            <span class="logo__text">pere programming</span>
-            <span class="logo__cursor">
-            </span>
-          </div>
-          </a></li>
+        <li>
+          <a class="contrast" href="/">
+            <div class="logo">
+              <span class="logo__mark">&gt;</span>
+              <span class="logo__text">pere programming</span>
+              <span class="logo__cursor"> </span>
+            </div>
+          </a>
+        </li>
       </ul>
       <ul>
         <li><a href="/articles">Articles</a></li>
-        <li><a href="https://vimebook.com" target="_blank" class="external">Ebook Vim</a></li>
+        <li>
+          <a href="https://vimebook.com" target="_blank" class="external"
+            >Ebook Vim</a
+          >
+        </li>
       </ul>
     </nav>
     <main class="container{% block custom_main_css %}{% endblock %}">
-        {% block content %}{% endblock %}
+      {% block content %}{% endblock %}
     </main>
   </body>
 </html>
