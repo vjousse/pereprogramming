@@ -600,7 +600,7 @@ S'en vient ensuite le contenu de la réponse à proprement parler. Dans notre ca
 
 ## Documentation auto-générée
 
-FastAPI est capable de générer la documentation de votre API automatiquement basé sur un standard nommé [OpenAPI](https://www.openapis.org/). Par défaut il génère une documentation avew [Swagger](https://swagger.io/) à l'URL [http://localhost:8000/docs](http://localhost:8000/docs)
+FastAPI est capable de générer la documentation de votre API automatiquement basé sur un standard nommé [OpenAPI](https://www.openapis.org/). Par défaut il génère une documentation avec [Swagger](https://swagger.io/) à l'URL [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ![Swagger documentation](images/swagger_fastapi_1.png)
 
