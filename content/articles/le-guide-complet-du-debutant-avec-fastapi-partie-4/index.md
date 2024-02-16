@@ -11,6 +11,8 @@ Dans cette partie, nous allons mettre en place l'API pour nous permettre de **r�
 
 <!-- more -->
 
+_Mise à jour le 16/02/2024 : Tortoise n'étant pas activement maintenu, j'ai décidé de passer le tutorial de Tortoise ORM à SQL Alchemy_
+
 ## Utilisation de Pydantic
 
 Comme je vous l'avais mentionné dans l'introduction, FastAPI a la particularité d'utiliser au maximum les [types de python](https://fastapi.tiangolo.com/python-types/) et plus particulièrement une librairie appelée [Pydantic](https://pydantic-docs.helpmanual.io/).
